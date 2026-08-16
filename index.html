@@ -87,15 +87,42 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 }
 @media (prefers-reduced-motion:reduce){.screen.first-in{animation:none}}
 .wordmark{font-family:var(--display);letter-spacing:-.04em;line-height:.84;
-  font-size:clamp(52px,15vw,148px);text-transform:uppercase}
+  font-size:clamp(52px,15vw,148px);text-transform:uppercase;position:relative;z-index:1}
 .wordmark .a{color:var(--white)}
 .wordmark .b{
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 34px rgba(252,132,0,.45));
+  position:relative;display:inline-block;
 }
+.wordmark .b::before{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  color:var(--cade);
+  filter:blur(22px);
+  opacity:.5;
+  z-index:-1;
+  transform:scale(1.08);
+}
+@media (prefers-reduced-motion:reduce){.wordmark .b::before{display:none}}
+
+/* AuthKit-style vertical spotlight beam, sits behind the wordmark */
+.spotlight-beam{
+  position:absolute; left:50%; top:-8%;
+  width:min(70vw,480px); height:60vh;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(252,132,0,.16), rgba(252,132,0,.03) 55%, transparent 85%);
+  clip-path:polygon(38% 0%, 62% 0%, 100% 100%, 0% 100%);
+  pointer-events:none; z-index:0;
+  filter:blur(2px);
+}
+[data-theme="light"] .spotlight-beam{
+  background:linear-gradient(180deg, rgba(224,108,0,.12), rgba(224,108,0,.02) 55%, transparent 85%);
+}
+@media (prefers-reduced-motion:reduce){.spotlight-beam{opacity:.6}}
 .tagline{font-size:clamp(11px,2.6vw,14px);letter-spacing:.34em;color:var(--dim);text-transform:uppercase}
 .rules{max-width:520px;font-size:14px;line-height:1.9;color:var(--dim);font-family:var(--ui);
+  text-align:left;
   padding:16px 20px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(160%);
   -webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--border);
   border-top:1px solid var(--glass-highlight);border-radius:20px;box-shadow:var(--e2);
@@ -108,13 +135,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   border-radius:14px;cursor:pointer;position:relative;overflow:hidden;
   background:linear-gradient(180deg,var(--cade-light),var(--cade-hot));color:#120C00;
   box-shadow:var(--e3);
-  transition:transform .12s var(--ease-spring), box-shadow .22s var(--ease-out), filter .22s var(--ease-out)}
+  transition:transform .12s var(--ease-spring), box-shadow .12s var(--ease-out), filter .22s var(--ease-out)}
 .btn::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.45) 50%,transparent 60%);
   transform:translateX(-120%);animation:btnShimmer 5.2s var(--ease-out) infinite}
 @keyframes btnShimmer{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 .btn:hover{transform:scale(1.02);filter:brightness(1.06)}
-.btn:active{transform:scale(.97)}
+.btn:active{transform:translateY(2px) scale(.98); box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .btn:focus-visible{outline:3px solid var(--white);outline-offset:3px}
 .btn.ghost{background:var(--glass-bg);backdrop-filter:blur(16px) saturate(140%);
   -webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--dim);box-shadow:var(--e1);
@@ -123,7 +150,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   border-radius:999px}
 .btn.ghost::after{display:none}
 .btn.ghost:hover{color:var(--white);background:var(--glass-highlight);filter:none;transform:scale(1.02)}
-.btn.ghost:active{transform:scale(.97)}
+.btn.ghost:active{transform:translateY(1px) scale(.97); box-shadow:none}
 
 .verdict{font-family:var(--display);text-transform:uppercase;line-height:.9;
   font-size:clamp(30px,8vw,66px);letter-spacing:-.02em}
@@ -132,7 +159,18 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .bigscore{font-family:var(--display);font-size:clamp(64px,19vw,168px);line-height:.82;
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 0 50px rgba(252,132,0,.4))}
+  filter:drop-shadow(0 0 50px rgba(252,132,0,.4));
+  position:relative;display:inline-block}
+.bigscore::before{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  color:var(--cade);
+  filter:blur(26px);
+  opacity:.55;
+  z-index:-1;
+  transform:scale(1.06);
+}
+@media (prefers-reduced-motion:reduce){.bigscore::before{display:none}}
 .scorelabel{font-size:11px;letter-spacing:.4em;color:var(--dim);text-transform:uppercase}
 .rank{font-family:var(--display);text-transform:uppercase;font-size:clamp(20px,5.4vw,34px);
   color:var(--white);letter-spacing:.02em}
@@ -151,7 +189,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 @keyframes sunburstSpin{to{transform:rotate(360deg)}}
 .stat .v{font-family:var(--display);font-size:clamp(17px,4.6vw,26px);color:var(--white);position:relative}
 .stat .l{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-top:3px;position:relative;font-family:var(--mono)}
-.stats-primary{grid-template-columns:repeat(4,minmax(64px,1fr))}
+.stats-primary{grid-template-columns:repeat(4,minmax(64px,1fr));position:relative;margin-top:6px}
+.stats-primary::before,.stats-primary::after{
+  content:"";position:absolute;width:14px;height:14px;pointer-events:none;
+  border-color:var(--cade);opacity:.55;
+}
+.stats-primary::before{top:-9px;left:-9px;border-top:2px solid;border-left:2px solid}
+.stats-primary::after{bottom:-9px;right:-9px;border-bottom:2px solid;border-right:2px solid}
 .stats-primary .stat{padding:14px 4px;box-shadow:var(--e2)}
 .stats-primary .v{font-size:clamp(15px,4.2vw,22px);
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
@@ -196,7 +240,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 }
 #dashBtn.show{display:flex;align-items:center;justify-content:center}
 #dashBtn:hover{transform:scale(1.05);filter:brightness(1.06)}
-#dashBtn:active{transform:scale(0.92)}
+#dashBtn:active{transform:translateY(2px) scale(0.95); box-shadow:0 2px 6px rgba(0,0,0,.4)}
 #dashBtn.cooling{
   background:linear-gradient(180deg, var(--void-2), var(--void));
   border-color:var(--border-strong);color:var(--dim);box-shadow:var(--e1);opacity:.85;filter:none;
@@ -225,7 +269,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <div class="screen on" id="scTitle">
   <canvas class="brandmark brandmark-title" id="markTitle"></canvas>
   <div class="tagline">CadeMarket presents</div>
-  <h1 class="wordmark"><span class="a">CADE</span><br><span class="b">RUSH</span></h1>
+  <div class="spotlight-beam" aria-hidden="true"></div>
+  <h1 class="wordmark"><span class="a">CADE</span><br><span class="b" data-text="RUSH">RUSH</span></h1>
   <div class="tagline">60 seconds &nbsp;/&nbsp; don't get rugged</div>
   <p class="rules">
     Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br>
@@ -257,7 +302,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <div class="verdict" id="eVerdict">RUGGED</div>
   <div>
     <div class="scorelabel">Final bag</div>
-    <div class="bigscore" id="eScore">0</div>
+    <div class="bigscore" id="eScore" data-text="0">0</div>
   </div>
   <div class="rank" id="eRank">PAPER HANDS</div>
   <div class="ranksub" id="eRoast"></div>
@@ -451,6 +496,23 @@ const scanPattern = (()=>{
   const pg = pc.getContext("2d");
   pg.fillStyle="rgba(0,0,0,0)"; pg.fillRect(0,0,2,3);
   pg.fillStyle="rgba(0,0,0,.16)"; pg.fillRect(0,0,2,1);
+  return ctx.createPattern(pc, "repeat");
+})();
+
+// film-grain texture — a static cached noise tile, tiled once per frame via
+// a single pattern fill (not per-pixel randomization every frame, which
+// would be a real cost). Adds the subtle grain that shows up across most
+// premium marketing sites and was entirely absent here.
+const grainPattern = (()=>{
+  const n=64;
+  const pc = document.createElement("canvas"); pc.width=n; pc.height=n;
+  const pg = pc.getContext("2d");
+  const img = pg.createImageData(n,n);
+  for(let i=0;i<img.data.length;i+=4){
+    const v = 128 + (Math.random()*70-35)|0;
+    img.data[i]=v; img.data[i+1]=v; img.data[i+2]=v; img.data[i+3]=18;
+  }
+  pg.putImageData(img,0,0);
   return ctx.createPattern(pc, "repeat");
 })();
 
@@ -1667,12 +1729,19 @@ function drawBackground(){
 
   // grid
   const step = 64*S;
+  const gxs=[], gys=[];
+  for(let x=(Game.bgPulse*14)%step; x<W; x+=step) gxs.push(x);
+  for(let y=(Game.bgPulse*14)%step; y<H; y+=step) gys.push(y);
   ctx.strokeStyle = heat>0 ? `rgba(255,42,42,${0.05+heat*0.09})` : tc.grid;
   ctx.lineWidth=1;
   ctx.beginPath();
-  for(let x=(Game.bgPulse*14)%step; x<W; x+=step){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
-  for(let y=(Game.bgPulse*14)%step; y<H; y+=step){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+  for(const x of gxs){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+  for(const y of gys){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
   ctx.stroke();
+
+  // dot markers at intersections — subtle technical-grid detail, thinned to every other row/col to stay cheap
+  ctx.fillStyle = heat>0 ? `rgba(255,42,42,${0.12+heat*0.14})` : (Theme.mode==="light" ? "rgba(20,15,5,.10)" : "rgba(255,255,255,.08)");
+  for(let i=0;i<gxs.length;i+=2){ for(let j=0;j<gys.length;j+=2){ ctx.beginPath(); ctx.arc(gxs[i],gys[j],1.3*S,0,TAU); ctx.fill(); } }
 
   // meltdown vignette
   if(heat>0){
@@ -1886,6 +1955,11 @@ function drawFinalRug(){
 
 /* --- post-processing: scanlines, glitch slices, chroma, invert --- */
 function drawPost(){
+  // film grain — subtle texture, single cached-pattern draw call
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = grainPattern;
+  ctx.fillRect(0,0,W,H);
+
   // scanlines — one cached pattern fill instead of a per-row loop
   ctx.globalAlpha = 0.5 + FX.glitch*0.4;
   ctx.fillStyle = scanPattern;
@@ -2121,9 +2195,11 @@ function animateScoreReveal(target){
   function tick(now){
     const p = clamp((now-t0)/dur, 0, 1);
     const eased = 1-Math.pow(1-p, 3);
-    el.textContent = Math.round(target*eased).toLocaleString();
+    const val = Math.round(target*eased).toLocaleString();
+    el.textContent = val;
+    el.setAttribute("data-text", val);
     if(p<1) requestAnimationFrame(tick);
-    else { el.textContent = target.toLocaleString(); }
+    else { el.textContent = target.toLocaleString(); el.setAttribute("data-text", target.toLocaleString()); }
   }
   requestAnimationFrame(tick);
 }
