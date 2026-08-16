@@ -204,6 +204,30 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .stats-secondary .stat{padding:8px 4px}
 .stats-secondary .v{font-size:clamp(13px,3.2vw,17px)}
 .btn.wide{flex:1;max-width:230px}
+
+.name-input{
+  font-family:var(--ui);font-size:13px;color:var(--white);
+  background:var(--glass-bg);backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border:1px solid var(--border);border-top-color:var(--glass-highlight);
+  border-radius:999px;padding:11px 18px;max-width:160px;text-align:center;
+  outline:none;transition:border-color .2s var(--ease-out);
+}
+.name-input:focus{border-color:var(--cade)}
+.name-input::placeholder{color:var(--dim)}
+
+.lb-list{width:100%;max-width:480px;max-height:52vh;overflow-y:auto;
+  padding:8px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;
+  font-family:var(--ui);font-size:14px}
+.lb-row:nth-child(odd){background:rgba(128,128,128,.06)}
+.lb-row .lb-rank{font-family:var(--display);width:32px;flex-shrink:0;color:var(--dim);font-size:15px}
+.lb-row .lb-name{flex:1;color:var(--white);font-weight:600;letter-spacing:.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .lb-score{font-family:var(--display);color:var(--cade);font-size:16px}
+.lb-row.rank-1 .lb-rank{color:var(--yellow)}
+.lb-row.rank-2 .lb-rank{color:#C9C9D0}
+.lb-row.rank-3 .lb-rank{color:#C98A4B}
 .btn.x-share{
   background:linear-gradient(180deg,#2A2A2E,#0A0A0C);color:#FFFFFF;
   border:1px solid rgba(255,255,255,.18);max-width:280px;width:100%;
@@ -293,6 +317,22 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
       </svg>
     </button>
   </div>
+  <div class="row">
+    <input class="name-input" id="playerNameInput" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard">
+    <button class="btn ghost" id="btnLeaderboard">🏆 Leaderboard</button>
+  </div>
+</div>
+
+<!-- ============ LEADERBOARD ============ -->
+<div class="screen" id="scLeaderboard">
+  <canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas>
+  <div class="eyebrow">Cade Prediction Arcade</div>
+  <div class="rank">GLOBAL LEADERBOARD</div>
+  <div class="ranksub" id="lbStatus">Loading...</div>
+  <div class="lb-list glass" id="lbList"></div>
+  <div class="row">
+    <button class="btn" id="btnLbBack">Back</button>
+  </div>
 </div>
 
 <!-- ============ RESULTS ============ -->
@@ -309,6 +349,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <div class="stats stats-primary" id="eStatsPrimary"></div>
   <div class="stats stats-secondary" id="eStatsSecondary"></div>
   <div class="hs" id="eHigh"></div>
+  <div class="hs" id="eGlobalRank"></div>
   <div class="tweetbox" id="eTweet"></div>
   <div class="row">
     <button class="btn" id="btnAgain">Run It Back</button>
@@ -441,7 +482,7 @@ const TAU   = Math.PI*2;
    ============================================================ */
 const Store = (()=>{
   let mem = null, ok = true;
-  const blank = {high:0, runs:0, bestMulti:0, bestGrazes:0, survivals:0, sound:true, theme:"dark"};
+  const blank = {high:0, runs:0, bestMulti:0, bestGrazes:0, survivals:0, sound:true, theme:"dark", playerName:""};
   try{ const t="__t"; localStorage.setItem(t,"1"); localStorage.removeItem(t); }
   catch(e){ ok=false; }
   function read(){
@@ -2151,11 +2192,12 @@ requestAnimationFrame(frame);
    SECTION 15 — SCREENS / RESULTS / SHARE
    ============================================================ */
 const scTitle=document.getElementById("scTitle"), scEnd=document.getElementById("scEnd");
+const scLeaderboard=document.getElementById("scLeaderboard");
 scTitle.classList.add("first-in"); // plays once on initial load only, never re-triggered
 const dashBtn=document.getElementById("dashBtn");
 const isTouchDevice = (window.matchMedia && matchMedia("(pointer:coarse)").matches) || "ontouchstart" in window;
 function show(el){
-  [scTitle,scEnd].forEach(s=>s.classList.remove("on")); if(el) el.classList.add("on");
+  [scTitle,scEnd,scLeaderboard].forEach(s=>s.classList.remove("on")); if(el) el.classList.add("on");
   dashBtn.classList.remove("show");
 }
 
@@ -2334,6 +2376,7 @@ function showResults(){
   document.getElementById("eTweet").textContent = buildTweet(score, rk.title, st);
   show(scEnd);
   paintDomMarks();
+  submitScoreToLeaderboard(score);
 }
 
 document.getElementById("btnStart").addEventListener("click", ()=>{ SFX.ui(); startRun(); });
@@ -2547,6 +2590,86 @@ document.getElementById("btnThemeEnd").addEventListener("click", toggleTheme);
   }
   Theme.apply(mode);
 })();
+
+/* ============================================================
+   SECTION 18 — GLOBAL LEADERBOARD
+   Talks to /api/submit-score and /api/leaderboard (Vercel serverless
+   functions backed by Redis). Everything here degrades silently if the
+   API isn't reachable — a leaderboard outage should never block or
+   interrupt an actual run.
+   ============================================================ */
+const nameInput = document.getElementById("playerNameInput");
+(function initPlayerName(){
+  const s = Store.read();
+  let name = s.playerName;
+  if(!name){
+    name = "DEGEN-" + Math.floor(1000+Math.random()*9000);
+    s.playerName = name; Store.write(s);
+  }
+  nameInput.value = name;
+})();
+nameInput.addEventListener("change", ()=>{
+  const s = Store.read();
+  s.playerName = nameInput.value.trim().slice(0,16) || s.playerName;
+  nameInput.value = s.playerName;
+  Store.write(s);
+});
+
+async function submitScoreToLeaderboard(score){
+  const rankEl = document.getElementById("eGlobalRank");
+  rankEl.textContent = "";
+  try{
+    const name = Store.read().playerName || "DEGEN";
+    const res = await fetch("/api/submit-score", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ name, score })
+    });
+    if(!res.ok) return; // silent — leaderboard being down is never the player's problem
+    const data = await res.json();
+    if(data.rank) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
+  }catch(e){ /* offline or API not configured yet — say nothing, don't interrupt */ }
+}
+
+async function fetchLeaderboard(){
+  const status = document.getElementById("lbStatus");
+  const list = document.getElementById("lbList");
+  status.textContent = "Loading..."; list.innerHTML = "";
+  try{
+    const res = await fetch("/api/leaderboard?limit=25");
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+    if(!data.entries || !data.entries.length){
+      status.textContent = "No runs yet. Be the first.";
+      return;
+    }
+    status.textContent = `Top ${data.entries.length} runs, all-time`;
+    list.innerHTML = data.entries.map((e,i)=>{
+      const rankClass = i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"";
+      return `<div class="lb-row ${rankClass}">
+        <div class="lb-rank">#${i+1}</div>
+        <div class="lb-name">${escapeHtml(e.name)}</div>
+        <div class="lb-score">${e.score.toLocaleString()}</div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    status.textContent = "Couldn't load the leaderboard — check back later.";
+  }
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+document.getElementById("btnLeaderboard").addEventListener("click", ()=>{
+  SFX.ui();
+  show(scLeaderboard);
+  paintDomMark("markLeaderboard", 0.55, Theme.colors().cade, Theme.colors().bg);
+  fetchLeaderboard();
+});
+document.getElementById("btnLbBack").addEventListener("click", ()=>{
+  SFX.ui();
+  show(scTitle);
+});
 
 </script>
 </body>
