@@ -11,14 +11,16 @@
 :root{
   --void:      #141414;   /* deep near-black base, sampled from brand banner */
   --void-2:    #1C1C1C;   /* raised surface */
-  --cade:      #FFA800;   /* Cade yellow-orange, sampled from sunburst mark */
-  --cade-hot:  #FF7A00;   /* deeper orange for shading/energy */
-  --cade-light:#FFC93C;   /* lighter ray-band highlight from the sunburst */
+  --cade:      #FC8400;   /* Cade yellow-orange, sampled from sunburst mark */
+  --cade-hot:  #D96D00;   /* deeper orange for shading/energy */
+  --cade-light:#FFD23C;   /* lighter ray-band highlight from the sunburst */
   --ink:       #0C0C0A;   /* the black used in the C mark */
   --white:     #FFFFFF;
   --dim:       #7A7A8C;
   --rug:       #FF2A2A;   /* aggressive red */
-  --pump:      #22FF88;   /* high-visibility green */
+  --pump:      #3DC96B;   /* high-visibility green, sampled from the real Cade Market icon system */
+  --yellow:    #F0F024;   /* pure callout yellow, sampled from Cade Market's banner ribbons — reserved for milestone/big moments */
+  --yellow-hot:#D4D400;
   --display:   "Arial Black", "Haettenschweiler", "Arial Narrow Bold", Impact, sans-serif;
   --mono:      ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ui:        -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
@@ -30,26 +32,29 @@
   --glass-highlight:rgba(255,255,255,.06);
   --e1: 0 1px 2px rgba(0,0,0,.4);
   --e2: 0 4px 14px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.5);
-  --e3: 0 14px 34px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.5), 0 0 40px rgba(255,168,0,.14);
+  --e3: 0 14px 34px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.5), 0 0 40px rgba(252,132,0,.14);
   --ease-out:    cubic-bezier(.16,1,.3,1);
   --ease-spring: cubic-bezier(.34,1.56,.64,1);
 }
 [data-theme="light"]{
-  --void:      #FAF7F2;
-  --void-2:    #FFFFFF;
-  --cade:      #E89400;
-  --cade-hot:  #C27C00;
-  --cade-light:#DAA36F;
-  --ink:       #FAF7F2;
+  --void:      #B5A886;   /* was #FAF7F2 — noticeably darker, less blown-out */
+  --void-2:    #C7BC9E;   /* was pure #FFFFFF — warm off-white instead of stark white */
+  --cade:      #E06C00;
+  --cade-hot:  #A85800;
+  --cade-light:#D99A3C;
+  --pump:      #2FA857;   /* deepened for contrast against the darker light background */
+  --yellow:    #C7A600;   /* deepened mustard — pure lemon yellow washes out on a light bg */
+  --yellow-hot:#A38700;
+  --ink:       #B5A886;
   --white:     #1A1712;
   --dim:       #6B6459;
-  --border:        rgba(20,15,5,.10);
-  --border-strong: rgba(20,15,5,.18);
-  --glass-bg:       rgba(255,255,255,.68);
-  --glass-highlight:rgba(255,255,255,.9);
-  --e1: 0 1px 2px rgba(20,15,5,.06);
-  --e2: 0 6px 18px rgba(20,15,5,.09), 0 1px 3px rgba(20,15,5,.07);
-  --e3: 0 18px 44px rgba(20,15,5,.14), 0 2px 8px rgba(20,15,5,.09), 0 0 34px rgba(232,148,0,.16);
+  --border:        rgba(20,15,5,.16);
+  --border-strong: rgba(20,15,5,.26);
+  --glass-bg:       rgba(181,168,134,.72);
+  --glass-highlight:rgba(255,250,240,.5);
+  --e1: 0 1px 2px rgba(20,15,5,.08);
+  --e2: 0 6px 18px rgba(20,15,5,.11), 0 1px 3px rgba(20,15,5,.09);
+  --e3: 0 18px 44px rgba(20,15,5,.16), 0 2px 8px rgba(20,15,5,.11), 0 0 34px rgba(224,108,0,.18);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--void);color:var(--white);
@@ -67,21 +72,27 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   align-items:center;justify-content:flex-start;gap:18px;
   padding:max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
   overflow-y:auto;-webkit-overflow-scrolling:touch;
-  background:radial-gradient(ellipse at 50% 45%, rgba(255,168,0,.14), rgba(20,20,20,.86) 75%);
+  background:radial-gradient(ellipse at 50% 45%, rgba(252,132,0,.14), rgba(20,20,20,.86) 75%);
   z-index:10;text-align:center;font-family:var(--ui);
   transition:background .3s var(--ease-out);
 }
 [data-theme="light"] .screen{
-  background:radial-gradient(ellipse at 50% 45%, rgba(232,148,0,.10), rgba(250,247,242,.86) 75%);
+  background:radial-gradient(ellipse at 50% 45%, rgba(224,108,0,.10), rgba(181,168,134,.88) 75%);
 }
 .screen.on{display:flex}
+.screen.first-in{animation:screenEnter .7s cubic-bezier(.22,1,.36,1) both}
+@keyframes screenEnter{
+  from{opacity:0;transform:translateY(14px) scale(.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){.screen.first-in{animation:none}}
 .wordmark{font-family:var(--display);letter-spacing:-.04em;line-height:.84;
   font-size:clamp(52px,15vw,148px);text-transform:uppercase}
 .wordmark .a{color:var(--white)}
 .wordmark .b{
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 0 34px rgba(255,168,0,.45));
+  filter:drop-shadow(0 0 34px rgba(252,132,0,.45));
 }
 .tagline{font-size:clamp(11px,2.6vw,14px);letter-spacing:.34em;color:var(--dim);text-transform:uppercase}
 .rules{max-width:520px;font-size:14px;line-height:1.9;color:var(--dim);font-family:var(--ui);
@@ -116,12 +127,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 
 .verdict{font-family:var(--display);text-transform:uppercase;line-height:.9;
   font-size:clamp(30px,8vw,66px);letter-spacing:-.02em}
-.verdict.win{color:var(--pump);text-shadow:0 0 40px rgba(34,255,136,.4)}
+.verdict.win{color:var(--pump);text-shadow:0 0 40px rgba(61,201,107,.4)}
 .verdict.lose{color:var(--rug);text-shadow:0 0 40px rgba(255,42,42,.4)}
 .bigscore{font-family:var(--display);font-size:clamp(64px,19vw,168px);line-height:.82;
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 0 50px rgba(255,168,0,.4))}
+  filter:drop-shadow(0 0 50px rgba(252,132,0,.4))}
 .scorelabel{font-size:11px;letter-spacing:.4em;color:var(--dim);text-transform:uppercase}
 .rank{font-family:var(--display);text-transform:uppercase;font-size:clamp(20px,5.4vw,34px);
   color:var(--white);letter-spacing:.02em}
@@ -134,7 +145,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   border-top:1px solid var(--glass-highlight);border-radius:14px;box-shadow:var(--e1);
   padding:12px 6px;position:relative;overflow:hidden}
 .stat::before{content:"";position:absolute;inset:-60%;pointer-events:none;
-  background:conic-gradient(from 0deg, transparent 0deg, rgba(255,168,0,.08) 18deg,
+  background:conic-gradient(from 0deg, transparent 0deg, rgba(252,132,0,.08) 18deg,
     transparent 36deg, transparent 72deg, rgba(255,255,255,.05) 90deg, transparent 108deg);
   animation:sunburstSpin 18s linear infinite}
 @keyframes sunburstSpin{to{transform:rotate(360deg)}}
@@ -157,6 +168,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .btn.x-share::after{background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.25) 50%,transparent 60%)}
 .btn.x-share:hover{filter:brightness(1.3)}
 .hs{font-size:11px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;font-family:var(--ui)}
+.hs.pulse{animation:hsPulse .9s ease both;color:var(--cade);font-size:13px}
+@keyframes hsPulse{0%,100%{transform:scale(1)}45%{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.hs.pulse{animation:none}}
 .hs b{color:var(--cade)}
 .tweetbox{max-width:520px;width:100%;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(160%);
   -webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--border);
@@ -174,7 +188,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   width:72px;height:72px;border-radius:50%;
   background:linear-gradient(180deg, var(--cade-light), var(--cade-hot));
   border:1px solid rgba(255,255,255,.35);color:#120C00;
-  font-size:30px;line-height:1;cursor:pointer;
+  cursor:pointer;
   box-shadow:var(--e3);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;
   transition:transform .12s var(--ease-spring), box-shadow .22s var(--ease-out),
@@ -187,11 +201,15 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   background:linear-gradient(180deg, var(--void-2), var(--void));
   border-color:var(--border-strong);color:var(--dim);box-shadow:var(--e1);opacity:.85;filter:none;
 }
+#dashBtn .icon-svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+/* consistent 2px-stroke icon language, matches the glass/gradient system */
+.icon-svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.icon-label{display:inline-flex;align-items:center;gap:7px}
 .sound-toggle{font-size:11px!important;padding:10px 18px!important}
 .theme-toggle{
   width:42px;height:42px;padding:0!important;border-radius:50%!important;
-  font-size:16px;display:inline-flex;align-items:center;justify-content:center;
+  display:inline-flex;align-items:center;justify-content:center;
 }
 @media (max-height:620px){.rules{display:none}.tweetbox{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}.btn::after{display:none}.stat::before{animation:none}}
@@ -199,7 +217,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 </head>
 <body>
 <div id="stage"><canvas id="cv"></canvas></div>
-<button id="dashBtn" aria-label="Ape Dash">⚡</button>
+<button id="dashBtn" aria-label="Ape Dash">
+  <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+</button>
 
 <!-- ============ TITLE ============ -->
 <div class="screen on" id="scTitle">
@@ -216,8 +236,17 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <button class="btn" id="btnStart">Ape In</button>
   <div class="row">
     <div class="hs" id="tHigh"></div>
-    <button class="btn ghost sound-toggle" id="btnSound">🔊 Sound On</button>
-    <button class="btn ghost theme-toggle" id="btnTheme" aria-label="Toggle theme">🌙</button>
+    <button class="btn ghost sound-toggle icon-label" id="btnSound">
+      <svg viewBox="0 0 24 24" class="icon-svg" id="soundIconSvg" aria-hidden="true">
+        <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/>
+      </svg>
+      <span id="soundLabel">Sound On</span>
+    </button>
+    <button class="btn ghost theme-toggle" id="btnTheme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" class="icon-svg" id="themeIconTitle" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+    </button>
   </div>
 </div>
 
@@ -245,7 +274,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <div class="row">
     <button class="btn ghost wide" id="btnCopy">Copy Tweet</button>
     <button class="btn ghost wide" id="btnCard">Save Image</button>
-    <button class="btn ghost theme-toggle" id="btnThemeEnd" aria-label="Toggle theme">🌙</button>
+    <button class="btn ghost theme-toggle" id="btnThemeEnd" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" class="icon-svg" id="themeIconEnd" aria-hidden="true">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+    </button>
   </div>
 </div>
 
@@ -376,16 +409,18 @@ const Theme = {
   mode: "dark",
   colors(){
     return this.mode === "light"
-      ? { bg:"#FAF7F2", grid:"rgba(20,15,5,.05)", text:"#1A1712", cade:"#E89400", dim:"#6B6459", cut:"#FAF7F2" }
-      : { bg:"#141414", grid:"rgba(255,168,0,.045)", text:"#FFFFFF", cade:"#FFA800", dim:"#6A6A7C", cut:"#141414" };
+      ? { bg:"#B5A886", grid:"rgba(20,15,5,.06)", text:"#1A1712", cade:"#E06C00", yellow:"#C7A600", dim:"#6B6459", cut:"#B5A886" }
+      : { bg:"#141414", grid:"rgba(252,132,0,.045)", text:"#FFFFFF", cade:"#FC8400", yellow:"#F0F024", dim:"#6A6A7C", cut:"#141414" };
   },
   apply(mode){
     this.mode = mode==="light" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", this.mode);
-    const icon = this.mode==="light" ? "☀️" : "🌙";
-    const bt = document.getElementById("btnTheme"), be = document.getElementById("btnThemeEnd");
-    if(bt) bt.textContent = icon;
-    if(be) be.textContent = icon;
+    const sunPath = '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.5 12h2.5M19 12h2.5M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>';
+    const moonPath = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+    const svgHTML = this.mode==="light" ? sunPath : moonPath;
+    const it = document.getElementById("themeIconTitle"), ie = document.getElementById("themeIconEnd");
+    if(it) it.innerHTML = svgHTML;
+    if(ie) ie.innerHTML = svgHTML;
     if(typeof paintDomMarks === "function") paintDomMarks();
   }
 };
@@ -485,7 +520,7 @@ cv.addEventListener("touchend", e=>{ e.preventDefault(); },{passive:false});
    SECTION 6b — CADE C-LIGHTNING MARK (procedural brand watermark)
    ============================================================ */
 function drawCadeMark(g, x, y, r, opt={}){
-  const ring = opt.ring || "#FFA800";
+  const ring = opt.ring || "#FC8400";
   const cut  = opt.cut  || "#141414";
   g.save();
   g.translate(x,y);
@@ -513,6 +548,27 @@ function drawCadeMark(g, x, y, r, opt={}){
   g.restore();
   g.globalAlpha = 1;
 }
+
+/* ============================================================
+   SECTION 6b2 — HAPTICS (feature-checked, silent no-op if unsupported)
+   Fires alongside SFX at the same event boundaries — never inside the
+   render loop, never on a per-frame basis.
+   ============================================================ */
+const Haptics = {
+  enabled: true,
+  supported: typeof navigator!=="undefined" && !!navigator.vibrate,
+  pulse(pattern){
+    if(!this.enabled || !this.supported) return;
+    try{ navigator.vibrate(pattern); }catch(e){}
+  },
+  graze(){ this.pulse(8); },
+  hit(){ this.pulse([25,20,45]); },
+  dash(){ this.pulse(10); },
+  lifeLost(){ this.pulse([30,25,30,25,60]); },
+  meltdown(){ this.pulse([18,30,18,30,42]); },
+  finalWin(){ this.pulse([15,15,15,15,15,15,60]); },
+  finalLose(){ this.pulse([35,25,80]); }
+};
 
 /* ============================================================
    SECTION 6c — AUDIO CORE (shared AudioContext for SFX + Music)
@@ -794,7 +850,7 @@ const Rings = {
   spawn(x,y,opt={}){
     const r = this.pool.find(q=>!q.on); if(!r) return;
     r.on=true; r.x=x; r.y=y; r.r=opt.r0||4; r.max=opt.max||90;
-    r.dur=opt.dur||0.4; r.life=r.dur; r.c=opt.c||"#FFA800"; r.w=opt.w||3;
+    r.dur=opt.dur||0.4; r.life=r.dur; r.c=opt.c||"#FC8400"; r.w=opt.w||3;
   },
   update(dt){ for(const r of this.pool){ if(!r.on)continue; r.life-=dt; if(r.life<=0){r.on=false;continue;} } },
   draw(){
@@ -877,7 +933,7 @@ const Ambient = {
       ctx.globalAlpha = p.alpha;
       ctx.translate(p.x,p.y); ctx.rotate(p.rot);
       if(p.type==="pump"){
-        ctx.fillStyle="#22FF88";
+        ctx.fillStyle="#3DC96B";
         ctx.beginPath(); ctx.arc(0,0,p.r,0,TAU); ctx.fill();
       } else {
         ctx.fillStyle="#FF2A2A";
@@ -915,8 +971,8 @@ const Player = {
     this.dash = CFG.DASH_TIME; this.dashCd = CFG.DASH_COOLDOWN;
     Game.stats.dashes++;
     FX.kick(7); FX.chroma = 1;
-    SFX.dash();
-    Parts.spawn(this.x,this.y,18,{c:"#FFA800",angle:this.dashAng+Math.PI,spread:1.1,smin:180,smax:460,spark:true});
+    SFX.dash(); Haptics.dash();
+    Parts.spawn(this.x,this.y,18,{c:"#FC8400",angle:this.dashAng+Math.PI,spread:1.1,smin:180,smax:460,spark:true});
   },
   // touch gets an on-screen offset so the finger doesn't cover the character
   effectiveTarget(){
@@ -931,7 +987,7 @@ const Player = {
       this.dash -= dt;
       this.vx = Math.cos(this.dashAng)*CFG.DASH_SPEED*S;
       this.vy = Math.sin(this.dashAng)*CFG.DASH_SPEED*S;
-      if(Math.random()<0.8) Parts.spawn(this.x,this.y,1,{c:"#FF7A00",smin:20,smax:80,lmin:.15,lmax:.35});
+      if(Math.random()<0.8) Parts.spawn(this.x,this.y,1,{c:"#D96D00",smin:20,smax:80,lmin:.15,lmax:.35});
     } else {
       let kx=0, ky=0;
       if(Input.keys["a"]||Input.keys["arrowleft"])  kx-=1;
@@ -984,7 +1040,7 @@ const Player = {
     for(let i=0;i<this.trail.length;i++){
       const t = i/this.trail.length, p=this.trail[i];
       ctx.globalAlpha = t*0.30;
-      ctx.fillStyle = this.dash>0 ? "#FF7A00" : "#FFA800";
+      ctx.fillStyle = this.dash>0 ? "#D96D00" : "#FC8400";
       ctx.beginPath(); ctx.arc(p.x,p.y,this.r*t*0.9,0,TAU); ctx.fill();
     }
     ctx.globalAlpha=1;
@@ -996,8 +1052,8 @@ const Player = {
     const heat = Game.scene==="play" ? clamp((Game.multi-1)/(CFG.MULTI_MAX-1),0,1) : 0;
     const glowR = this.r*(3.4+heat*1.6);
     const g = ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,glowR);
-    g.addColorStop(0, this.dash>0 ? "rgba(255,122,0,.55)" : `rgba(255,168,0,${0.42+heat*0.28})`);
-    g.addColorStop(1,"rgba(255,168,0,0)");
+    g.addColorStop(0, this.dash>0 ? "rgba(217,109,0,.55)" : `rgba(252,132,0,${0.42+heat*0.28})`);
+    g.addColorStop(1,"rgba(252,132,0,0)");
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(this.x,this.y,glowR,0,TAU); ctx.fill();
 
     // electric arcs — jagged crackle, more frequent and longer at high heat / while dashing
@@ -1008,7 +1064,7 @@ const Player = {
         const a0 = rnd(0,TAU);
         const baseR = this.r+3*S;
         const len = this.r*(1.6+heat*1.8+ (this.dash>0?1.4:0));
-        ctx.strokeStyle = i%2===0 ? "#FFC93C" : "#FFA800";
+        ctx.strokeStyle = i%2===0 ? "#FFD23C" : "#FC8400";
         ctx.lineWidth = 1.4*S;
         ctx.globalAlpha = 0.75;
         ctx.beginPath();
@@ -1027,9 +1083,9 @@ const Player = {
     }
 
     // body
-    ctx.fillStyle = this.dash>0 ? "#FFFFFF" : "#FFA800";
+    ctx.fillStyle = this.dash>0 ? "#FFFFFF" : "#FC8400";
     ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,TAU); ctx.fill();
-    ctx.lineWidth = 2*S; ctx.strokeStyle = this.dash>0 ? "#FF7A00" : "#FFE9A8";
+    ctx.lineWidth = 2*S; ctx.strokeStyle = this.dash>0 ? "#D96D00" : "#FFE9A8";
     ctx.stroke();
 
     // lightning bolt mark inside the body
@@ -1045,7 +1101,7 @@ const Player = {
     // dash-ready ring
     if(this.dashCd<=0 && this.dash<=0){
       ctx.globalAlpha = 0.5+Math.sin(performance.now()/180)*0.25;
-      ctx.strokeStyle="#FFA800"; ctx.lineWidth=1.5*S;
+      ctx.strokeStyle="#FC8400"; ctx.lineWidth=1.5*S;
       ctx.beginPath(); ctx.arc(this.x,this.y,this.r+7*S,0,TAU); ctx.stroke();
     } else if(this.dashCd>0){
       const p = 1 - this.dashCd/CFG.DASH_COOLDOWN;
@@ -1153,12 +1209,12 @@ const Rugs = {
 
   destroy(r, byDash){
     r.on = false;
-    Parts.spawn(r.x,r.y, byDash?26:16, {c:byDash?"#FFA800":r.T.col, smin:100, smax:420, spark:byDash, rmin:2, rmax:5});
+    Parts.spawn(r.x,r.y, byDash?26:16, {c:byDash?"#FC8400":r.T.col, smin:100, smax:420, spark:byDash, rmin:2, rmax:5});
     if(byDash){
       Game.stats.shredded++;
       Game.addScore(80*Game.multi, r.x, r.y, "SHREDDED");
       Game.hitstop = Math.max(Game.hitstop, CFG.HITSTOP_DASHKILL);
-      Rings.spawn(r.x,r.y,{r0:r.r*0.6,max:r.r*4.5,dur:0.42,c:"#FFA800",w:4});
+      Rings.spawn(r.x,r.y,{r0:r.r*0.6,max:r.r*4.5,dur:0.42,c:"#FC8400",w:4});
       FX.kick(11); FX.invertHit(0.35); FX.glitchHit(0.5);
     }
   },
@@ -1223,7 +1279,7 @@ const Pumps = {
     for(const p of this.pool){
       if(!p.on) continue;
       p.age+=dt; p.born=Math.min(1,p.born+dt*4); p.life-=dt;
-      if(p.life<=0){ p.on=false; Parts.spawn(p.x,p.y,5,{c:"#22FF88",smin:20,smax:80}); }
+      if(p.life<=0){ p.on=false; Parts.spawn(p.x,p.y,5,{c:"#3DC96B",smin:20,smax:80}); }
     }
   },
   draw(){
@@ -1234,9 +1290,9 @@ const Pumps = {
       const rr = p.r*pulse*p.born;
       ctx.globalAlpha = fade;
       const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rr*3.2);
-      g.addColorStop(0,"rgba(34,255,136,.40)"); g.addColorStop(1,"rgba(34,255,136,0)");
+      g.addColorStop(0,"rgba(61,201,107,.40)"); g.addColorStop(1,"rgba(61,201,107,0)");
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,rr*3.2,0,TAU); ctx.fill();
-      ctx.fillStyle="#22FF88";
+      ctx.fillStyle="#3DC96B";
       ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,TAU); ctx.fill();
       // up-arrow
       ctx.fillStyle="#04240F";
@@ -1283,7 +1339,7 @@ const Game = {
   addScore(n, x, y, label){
     n = Math.round(n);
     this.score += n;
-    if(x!==undefined) Floaters.add(x, y-22*S, (label?label+" ":"+")+n, "#FFA800", label?15:19);
+    if(x!==undefined) Floaters.add(x, y-22*S, (label?label+" ":"+")+n, "#FC8400", label?15:19);
   },
 
   bumpMulti(x,y){
@@ -1301,13 +1357,13 @@ const Game = {
     FX.kick(3.2+Math.min(9,this.multi*0.45)+(milestone?7:0));
     FX.glitchHit(0.35+Math.min(0.5,this.multi*0.04)+(milestone?0.35:0));
     FX.chroma = Math.min(1, 0.3+this.multi*0.06);
-    Parts.spawn(x,y, milestone?10:4, {c:"#FFA800",smin:60,smax:milestone?360:200,lmin:.15,lmax:.4,spark:true});
-    Rings.spawn(x,y,{r0:6,max:milestone?70:34,dur:milestone?0.5:0.3,c:"#FFA800",w:milestone?4:2});
-    SFX.graze(this.multi);
+    Parts.spawn(x,y, milestone?10:4, {c:milestone?Theme.colors().yellow:"#FC8400",smin:60,smax:milestone?360:200,lmin:.15,lmax:.4,spark:true});
+    Rings.spawn(x,y,{r0:6,max:milestone?70:34,dur:milestone?0.5:0.3,c:milestone?Theme.colors().yellow:"#FC8400",w:milestone?4:2});
+    SFX.graze(this.multi); Haptics.graze();
 
     if(milestone){
       this.addScore(CFG.STREAK_BONUS*(1+this.grazeStreak*0.08), x, y-18*S, `STREAK x${this.grazeStreak}`);
-      Floaters.add(x, y-46*S, `x${this.grazeStreak} STREAK`, "#FF7A00", 20);
+      Floaters.add(x, y-46*S, `x${this.grazeStreak} STREAK`, Theme.colors().yellow, 20);
       FX.invertHit(0.4);
       SFX.streak(this.grazeStreak);
     }
@@ -1327,7 +1383,7 @@ const Game = {
     Parts.spawn(Player.x,Player.y,34,{c:"#FF2A2A",smin:120,smax:520,rmin:2,rmax:5});
     Rings.spawn(Player.x,Player.y,{r0:8,max:120,dur:0.5,c:"#FF2A2A",w:5});
     Floaters.add(Player.x, Player.y-30*S, "RUGGED", "#FF2A2A", 26);
-    SFX.hit();
+    SFX.hit(); Haptics.hit();
 
     if(this.lives<=0 && this.scene==="play" && !this.diedEarly){
       this.diedEarly = true;
@@ -1335,7 +1391,7 @@ const Game = {
       this.deathTime = CFG.RUN_SECONDS - this.time;
       this.scene = "out"; this.sceneT = 0;
       FX.kick(40); FX.invertHit(1); FX.flashHit(1); this.hitstop = CFG.HITSTOP_FINAL;
-      SFX.lifeLost(); SFX.lose();
+      SFX.lifeLost(); SFX.lose(); Haptics.lifeLost();
     }
   },
 
@@ -1350,7 +1406,7 @@ const Game = {
     this.difficulty = tier / 5;                              // 0, .2, .4, .6, .8, 1
     if(tier !== this.lastTier && this.lastTier >= 0){
       FX.kick(10); FX.chroma = Math.max(FX.chroma, 0.4);
-      Floaters.add(W/2, H*0.14, "HEATING UP", "#FF7A00", 22);
+      Floaters.add(W/2, H*0.14, "HEATING UP", Theme.colors().yellow, 22);
       SFX.tick(false);
     }
     this.lastTier = tier;
@@ -1361,6 +1417,7 @@ const Game = {
       FX.invertHit(1); FX.kick(22); FX.glitchHit(1.6);
       Floaters.add(W/2, H*0.4, "MELTDOWN", "#FF2A2A", 46);
       Music.setIntensity("meltdown");
+      Haptics.meltdown();
     }
 
     let rate = lerp(CFG.SPAWN_RATE_START, CFG.SPAWN_RATE_MID, this.difficulty);  // seconds between spawns
@@ -1431,13 +1488,13 @@ const Game = {
         this.hitstop = Math.max(this.hitstop, big?CFG.HITSTOP_STREAK:CFG.HITSTOP_PUMP);
         if(big){
           this.stats.bigPumps = (this.stats.bigPumps||0)+1;
-          Parts.spawn(p.x,p.y,26,{c:"#FFC93C",smin:120,smax:420,rmin:2,rmax:5,spark:true});
-          Rings.spawn(p.x,p.y,{r0:8,max:64,dur:0.4,c:"#FFC93C",w:3.5});
+          Parts.spawn(p.x,p.y,26,{c:Theme.colors().yellow,smin:120,smax:420,rmin:2,rmax:5,spark:true});
+          Rings.spawn(p.x,p.y,{r0:8,max:64,dur:0.4,c:Theme.colors().yellow,w:3.5});
           FX.invertHit(0.25);
           SFX.bigPump();
         } else {
-          Parts.spawn(p.x,p.y,16,{c:"#22FF88",smin:90,smax:320,rmin:2,rmax:4});
-          Rings.spawn(p.x,p.y,{r0:6,max:38,dur:0.28,c:"#22FF88",w:2.5});
+          Parts.spawn(p.x,p.y,16,{c:"#3DC96B",smin:90,smax:320,rmin:2,rmax:4});
+          Rings.spawn(p.x,p.y,{r0:6,max:38,dur:0.28,c:"#3DC96B",w:2.5});
           SFX.pump();
         }
         FX.kick(big?9:4); FX.chroma=Math.max(FX.chroma, big?0.6:0.4);
@@ -1539,11 +1596,11 @@ const Game = {
         this.finalRugHold = 0.65;
         if(Player.dash>0){
           this.survivedFinal=true; this.finalRugOutcome="dashed";
-          Parts.spawn(r.x,r.y,60,{c:"#FFA800",smin:150,smax:700,rmin:2,rmax:6,spark:true});
-          Rings.spawn(r.x,r.y,{r0:r.r*0.5,max:r.r*6,dur:0.6,c:"#FFA800",w:6});
+          Parts.spawn(r.x,r.y,60,{c:"#FC8400",smin:150,smax:700,rmin:2,rmax:6,spark:true});
+          Rings.spawn(r.x,r.y,{r0:r.r*0.5,max:r.r*6,dur:0.6,c:"#FC8400",w:6});
           this.hitstop = CFG.HITSTOP_FINAL;
           FX.kick(34); FX.invertHit(1);
-          SFX.win();
+          SFX.win(); Haptics.finalWin();
         } else {
           this.survivedFinal=false; this.finalRugOutcome="rugged";
           if(this.stats.firstHitAt===null) this.stats.firstHitAt = 0;
@@ -1551,7 +1608,7 @@ const Game = {
           Rings.spawn(Player.x,Player.y,{r0:10,max:r.r*6,dur:0.6,c:"#FF2A2A",w:6});
           this.hitstop = CFG.HITSTOP_FINAL;
           FX.kick(34); FX.invertHit(1); FX.flashHit(1);
-          SFX.lose();
+          SFX.lose(); Haptics.finalLose();
         }
       }
       if(r.hit){
@@ -1561,7 +1618,7 @@ const Game = {
       else if(this.sceneT > CFG.FINAL_RUG_WINDOW){
         this.survivedFinal = true;
         this.finalRugOutcome = "dodged";
-        SFX.win();
+        SFX.win(); Haptics.finalWin();
         this.endRun();
       }
     }
@@ -1747,7 +1804,7 @@ function drawHUD(){
   ctx.translate(W-18*S, 14*S);
   ctx.scale(pulse,pulse);
   ctx.font=`900 ${38*S}px Arial Black, Impact, sans-serif`;
-  ctx.fillStyle = hot>0.62 ? "#FF2A2A" : hot>0.3 ? "#FF7A00" : tc.cade;
+  ctx.fillStyle = hot>0.62 ? "#FF2A2A" : hot>0.3 ? tc.yellow : tc.cade;
   if(hot>0.35){ ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=18+hot*26; }
   ctx.fillText(`${m.toFixed(2)}x`, 0, 0);
   ctx.restore();
@@ -1785,7 +1842,7 @@ function drawFreeze(){
   const pop = 1+Math.max(0,(0.18-t))*3;
   ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.font=`900 ${Math.min(W*0.13, 92*S)*pop}px Arial Black, Impact, sans-serif`;
-  ctx.fillStyle="#22FF88"; ctx.shadowColor="#22FF88"; ctx.shadowBlur=40;
+  ctx.fillStyle="#3DC96B"; ctx.shadowColor="#3DC96B"; ctx.shadowBlur=40;
   ctx.fillText("YOU SURVIVED", W/2, H/2);
   ctx.shadowBlur=0;
   ctx.restore();
@@ -1845,7 +1902,7 @@ function drawPost(){
       try{ ctx.drawImage(cv, 0, sy*DPR, cv.width, sh*DPR, off, sy, W, sh); }catch(e){}
       if(Math.random()<0.5){
         ctx.globalCompositeOperation="screen";
-        ctx.fillStyle = Math.random()<0.5 ? "rgba(255,168,0,.16)" : "rgba(255,42,42,.16)";
+        ctx.fillStyle = Math.random()<0.5 ? "rgba(252,132,0,.16)" : "rgba(255,42,42,.16)";
         ctx.fillRect(off, sy, W, sh);
         ctx.globalCompositeOperation="source-over";
       }
@@ -1873,7 +1930,7 @@ function drawPost(){
   if(FX.chroma>0.02){
     ctx.globalCompositeOperation="screen";
     ctx.globalAlpha = FX.chroma*0.10;
-    ctx.fillStyle="#FFA800"; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#FC8400"; ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=1; ctx.globalCompositeOperation="source-over";
   }
 
@@ -1951,6 +2008,7 @@ requestAnimationFrame(frame);
    SECTION 15 — SCREENS / RESULTS / SHARE
    ============================================================ */
 const scTitle=document.getElementById("scTitle"), scEnd=document.getElementById("scEnd");
+scTitle.classList.add("first-in"); // plays once on initial load only, never re-triggered
 const dashBtn=document.getElementById("dashBtn");
 const isTouchDevice = (window.matchMedia && matchMedia("(pointer:coarse)").matches) || "ontouchstart" in window;
 function show(el){
@@ -2074,6 +2132,7 @@ function showResults(){
   const s = Store.read();
   const score = Math.round(Game.score);
   const st = Game.stats;
+  const previousBest = s.high;
   const isHigh = score > s.high;
   s.high = Math.max(s.high, score);
   s.runs = (s.runs||0)+1;
@@ -2109,9 +2168,23 @@ function showResults(){
     ["RUGGED", st.hits]
   ].map(([l,v2])=>`<div class="stat"><div class="v">${v2}</div><div class="l">${l}</div></div>`).join("");
 
-  document.getElementById("eHigh").innerHTML = isHigh
-    ? `<b>NEW HIGH SCORE</b> &nbsp;·&nbsp; run ${s.runs}`
-    : `Best <b>${s.high.toLocaleString()}</b> &nbsp;·&nbsp; run ${s.runs}`;
+  const eHighEl = document.getElementById("eHigh");
+  eHighEl.classList.remove("pulse");
+  if(isHigh && previousBest>0){
+    eHighEl.innerHTML = `<b>NEW HIGH SCORE</b> &nbsp;·&nbsp; beat your old best by ${(score-previousBest).toLocaleString()}`;
+    eHighEl.classList.add("pulse");
+  } else if(isHigh){
+    eHighEl.innerHTML = `<b>NEW HIGH SCORE</b> &nbsp;·&nbsp; run ${s.runs}`;
+    eHighEl.classList.add("pulse");
+  } else {
+    const gap = previousBest - score;
+    if(gap<=150){
+      eHighEl.innerHTML = `<b>${gap.toLocaleString()} points off your best</b> &nbsp;·&nbsp; run it back`;
+      eHighEl.classList.add("pulse");
+    } else {
+      eHighEl.innerHTML = `Best <b>${s.high.toLocaleString()}</b> &nbsp;·&nbsp; run ${s.runs}`;
+    }
+  }
 
   document.getElementById("eTweet").textContent = buildTweet(score, rk.title, st);
   show(scEnd);
@@ -2154,18 +2227,26 @@ dashBtn.addEventListener("mousedown", e=>{ e.preventDefault(); Input.dashQueued=
 
 /* --- sound toggle (controls both SFX and the music loop) --- */
 const btnSound = document.getElementById("btnSound");
+const soundLabel = document.getElementById("soundLabel");
+const soundIconSvg = document.getElementById("soundIconSvg");
+function setSoundIcon(on){
+  soundLabel.textContent = on ? "Sound On" : "Sound Off";
+  soundIconSvg.style.opacity = on ? "1" : "0.4";
+}
 (function initSound(){
   const s = Store.read();
   const on = s.sound!==false;
   SFX.setEnabled(on);
   Music.setEnabled(on);
-  btnSound.textContent = on ? "🔊 Sound On" : "🔇 Sound Off";
+  Haptics.enabled = on;
+  setSoundIcon(on);
 })();
 btnSound.addEventListener("click", ()=>{
   const next = !SFX.isEnabled();
   SFX.setEnabled(next);
   Music.setEnabled(next);
-  btnSound.textContent = next ? "🔊 Sound On" : "🔇 Sound Off";
+  Haptics.enabled = next;
+  setSoundIcon(next);
   const s = Store.read(); s.sound = next; Store.write(s);
   if(next){
     SFX.unlock(); SFX.ui();
@@ -2194,7 +2275,7 @@ function buildShareCard(){
   const tc = Theme.colors();
   g.fillStyle = tc.bg; g.fillRect(0,0,cw,ch);
   const glow = g.createRadialGradient(cw/2,ch*0.4,0,cw/2,ch*0.4,cw*0.9);
-  glow.addColorStop(0,"rgba(255,168,0,.12)"); glow.addColorStop(1,"rgba(20,20,20,0)");
+  glow.addColorStop(0,"rgba(252,132,0,.12)"); glow.addColorStop(1,"rgba(20,20,20,0)");
   g.fillStyle=glow; g.fillRect(0,0,cw,ch);
 
   // sunburst rays, faint
@@ -2216,7 +2297,7 @@ function buildShareCard(){
   g.fillStyle=tc.cade; g.font="700 26px ui-monospace, monospace";
   g.fillText("CADE PREDICTION ARCADE", 70, 80);
 
-  g.fillStyle = Game.survivedFinal ? "#22FF88" : "#FF2A2A";
+  g.fillStyle = Game.survivedFinal ? "#3DC96B" : "#FF2A2A";
   g.font="900 52px Arial Black, Impact, sans-serif";
   g.fillText(Game.survivedFinal ? "ABSOLUTE DEGEN" : "RUGGED AT THE FINISH LINE", 70, 180);
 
