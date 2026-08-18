@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/polish.css">
 <link rel="stylesheet" href="css/burst.css">
+<link rel="stylesheet" href="css/identity.css">
 </head>
 <body>
 <div id="stage"><canvas id="cv"></canvas></div>
@@ -20,7 +21,22 @@
 
 <button id="burstBtn" aria-label="Burst" type="button">BURST</button>
 
-<div class="screen on" id="scTitle">
+<div class="screen" id="scIdentity">
+  <div class="identity-mark">CADE OPS</div>
+  <div class="eyebrow">WELCOME TO CADE OPS</div>
+  <div class="identity-title">CHOOSE YOUR CALLSIGN</div>
+  <p class="identity-copy">This becomes your permanent CADE OPS player identity.</p>
+  <form id="identityForm" autocomplete="off" novalidate>
+    <label class="sr-only" for="identityInput">Choose your callsign</label>
+    <input id="identityInput" class="identity-input" minlength="10" maxlength="16" placeholder="DEGEN-2832" spellcheck="false" autocapitalize="characters" required>
+    <div class="identity-hint" id="identityHint">10–16 characters · letters, numbers, spaces, _ or -</div>
+    <div class="identity-lock">YOUR CALLSIGN CAN'T BE CHANGED.</div>
+    <button class="btn identity-submit" type="submit">CONFIRM CALLSIGN</button>
+    <div class="identity-status" id="identityStatus" aria-live="polite"></div>
+  </form>
+</div>
+
+<div class="screen" id="scTitle">
   <canvas class="brandmark brandmark-title" id="markTitle"></canvas>
   <div class="tagline">CadeMarket presents</div>
   <div class="spotlight-beam" aria-hidden="true"></div>
@@ -77,8 +93,9 @@
   <div class="hs" id="eHigh"></div>
   <div class="hs" id="eGlobalRank"></div>
   <div class="name-group name-group-results">
-    <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
-    <div class="name-hint" id="nameHint"></div>
+    <div class="player-name-locked-label">CALLSIGN</div>
+    <div class="player-name-locked" id="playerNameLocked">DEGEN</div>
+    <div class="name-hint">Locked to this CADE OPS player</div>
   </div>
   <div class="tweetbox" id="eTweet"></div>
   <div class="row"><button class="btn" id="btnAgain">Run It Back</button></div>

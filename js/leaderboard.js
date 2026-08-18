@@ -1,130 +1,216 @@
 /* ============================================================
    CADE OPS — leaderboard.js
-   Player name (10-char minimum, capped at 2 lifetime changes) plus the
-   global leaderboard fetch/submit. Talks to /api/submit-score and
-   /api/leaderboard (unchanged from CADE RUSH — score submission is
-   game-agnostic, no server-side changes needed for this conversion).
-
-   Everything here degrades silently if the API isn't configured or
-   reachable — a leaderboard outage must never block or interrupt an
-   actual run. See the two /api files for the Redis-backed
-   implementation and setup steps.
+   One persistent anonymous player per browser installation.
+   Identity is registered once through /api/player, then locked.
+   The server's HttpOnly cookie is authoritative; localStorage is
+   only a durable client-side cache of the server-issued identity.
    ============================================================ */
-import { Store, Theme } from "./main.js";
+import { Store, Theme, Game } from "./main.js";
 import { SFX } from "./audio.js";
 import { show, scTitle, scLeaderboard, paintDomMark } from "./ui.js";
 
-const nameInput = document.getElementById("playerNameInput");
-const nameHint = document.getElementById("nameHint");
+const identityScreen = document.getElementById("scIdentity");
+const identityForm = document.getElementById("identityForm");
+const identityInput = document.getElementById("identityInput");
+const identityHint = document.getElementById("identityHint");
+const identityStatus = document.getElementById("identityStatus");
+const lockedName = document.getElementById("playerNameLocked");
 
-export function initPlayerName(){
-  const s = Store.read();
-  let name = s.playerName;
-  if(!name){
-    // "DEGEN-" + 4 digits = 10 characters exactly, satisfies the minimum by construction
-    name = "DEGEN-" + Math.floor(1000+Math.random()*9000);
-    s.playerName = name; Store.write(s);
-  }
-  nameInput.value = name;
-  updateNameState();
+function setLockedName(name) {
+  if (lockedName) lockedName.textContent = name || "DEGEN";
 }
 
-function updateNameState(){
+function persistIdentity(playerId, name) {
   const s = Store.read();
-  const left = 2 - (s.nameChangesUsed||0);
-  if(left<=0){
-    nameInput.disabled = true;
-    nameHint.textContent = "Name locked — 0 changes left";
-  } else {
-    nameInput.disabled = false;
-    nameHint.textContent = `${left} name change${left===1?"":"s"} left · min 10 characters`;
-  }
-  nameHint.classList.remove("warn");
-}
-function nameError(msg){
-  nameHint.textContent = msg;
-  nameHint.classList.add("warn");
-  nameInput.classList.add("input-error");
-  setTimeout(()=>{ nameInput.classList.remove("input-error"); updateNameState(); }, 1600);
-}
-
-nameInput.addEventListener("change", ()=>{
-  const s = Store.read();
-  const changesUsed = s.nameChangesUsed || 0;
-  const raw = nameInput.value.trim();
-
-  if(changesUsed >= 2){
-    nameInput.value = s.playerName;
-    return; // input is disabled at this point anyway — belt and suspenders
-  }
-  if(raw.length < 10){
-    nameInput.value = s.playerName;
-    nameError("Minimum 10 characters");
-    return;
-  }
-
-  const finalName = raw.slice(0,16).toUpperCase();
-  s.playerName = finalName;
-  s.nameChangesUsed = changesUsed + 1;
+  s.playerId = playerId;
+  s.playerName = name;
+  s.nameChangesUsed = 0;
   Store.write(s);
-  nameInput.value = finalName;
-  SFX.ui();
-  updateNameState();
-});
+  setLockedName(name);
+}
 
-export async function submitScoreToLeaderboard(score){
+function persistPendingIdentity(playerId) {
+  const s = Store.read();
+  s.playerId = playerId;
+  Store.write(s);
+}
+
+function showIdentity(message = "") {
+  if (scTitle) scTitle.classList.remove("on");
+  if (identityScreen) identityScreen.classList.add("on");
+  if (message && identityStatus) identityStatus.textContent = message;
+}
+
+function showTitle() {
+  if (identityScreen) identityScreen.classList.remove("on");
+  if (scTitle) scTitle.classList.add("on");
+  setLockedName(Store.read().playerName);
+}
+
+function setIdentityBusy(busy) {
+  const submit = identityForm?.querySelector("button[type=submit]");
+  if (submit) {
+    submit.disabled = busy;
+    submit.textContent = busy ? "LOCKING..." : "CONFIRM CALLSIGN";
+  }
+  if (identityInput) identityInput.disabled = busy;
+}
+
+function validateLocalName(raw) {
+  const name = String(raw || "").replace(/\s+/g, " ").trim().toUpperCase();
+  if (name.length < 10) return { error: "Minimum 10 characters." };
+  if (name.length > 16) return { error: "Maximum 16 characters." };
+  if (!/^[A-Z0-9 _-]+$/.test(name)) return { error: "Use letters, numbers, spaces, _ or - only." };
+  return { name };
+}
+
+async function loadServerIdentity() {
+  const res = await fetch("/api/player", { credentials: "same-origin", cache: "no-store" });
+  if (res.ok) return res.json();
+  throw new Error("Identity service unavailable");
+}
+
+export async function initPlayerName() {
+  const saved = Store.read();
+  if (identityInput && saved.playerName) identityInput.value = saved.playerName;
+
+  if (identityForm && !identityForm.dataset.bound) {
+    identityForm.dataset.bound = "1";
+    identityForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const checked = validateLocalName(identityInput?.value);
+      if (checked.error) {
+        if (identityHint) identityHint.textContent = checked.error;
+        identityHint?.classList.add("warn");
+        return;
+      }
+      identityHint?.classList.remove("warn");
+      if (identityStatus) identityStatus.textContent = "Registering your player...";
+      setIdentityBusy(true);
+      try {
+        const res = await fetch("/api/player", {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: checked.name })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (res.status === 409 && data.name && data.playerId) {
+            persistIdentity(data.playerId, data.name);
+            showTitle();
+            return;
+          }
+          throw new Error(data.error || "Could not register callsign");
+        }
+        persistIdentity(data.playerId, data.name);
+        if (identityStatus) identityStatus.textContent = "CALLSIGN LOCKED";
+        setTimeout(showTitle, 280);
+      } catch (err) {
+        if (identityStatus) identityStatus.textContent = err.message || "Registration failed. Try again.";
+      } finally {
+        setIdentityBusy(false);
+      }
+    });
+  }
+
+  try {
+    const player = await loadServerIdentity();
+    if (player?.playerId && player?.registered && player?.name) {
+      persistIdentity(player.playerId, player.name);
+      showTitle();
+      return;
+    }
+    if (player?.playerId) {
+      persistPendingIdentity(player.playerId);
+      showIdentity("WELCOME TO CADE OPS");
+      return;
+    }
+    showIdentity("WELCOME TO CADE OPS");
+  } catch (err) {
+    // A previously registered player can still enter during a temporary
+    // identity-service outage. Score submission remains server-authoritative
+    // and will refuse an unverified/tampered identity rather than trusting it.
+    if (saved.playerId && saved.playerName) {
+      setLockedName(saved.playerName);
+      showTitle();
+    } else {
+      showIdentity("CONNECTION REQUIRED TO REGISTER");
+    }
+  }
+}
+
+export async function submitScoreToLeaderboard(score) {
   const rankEl = document.getElementById("eGlobalRank");
-  if(rankEl) rankEl.textContent = "";
-  try{
-    const name = Store.read().playerName || "DEGEN";
+  if (rankEl) rankEl.textContent = "";
+  try {
+    const s = Store.read();
+    if (!s.playerId || !s.playerName) return;
+    const runId = `run-${Math.floor(Game.runStartedAt || Date.now())}-${Math.round(score)}`;
     const res = await fetch("/api/submit-score", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ name, score })
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playerId: s.playerId, name: s.playerName, score, runId })
     });
-    if(!res.ok) return;
+    if (!res.ok) return;
     const data = await res.json();
-    if(data.rank && rankEl) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
-  }catch(e){ /* offline or API not configured yet — say nothing, don't interrupt */ }
+    setLockedName(data.name || s.playerName);
+    if (data.rank && rankEl) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
+  } catch (e) { /* leaderboard failure never interrupts the run/results flow */ }
 }
 
-export async function fetchLeaderboard(){
+export async function fetchLeaderboard() {
   const status = document.getElementById("lbStatus");
   const list = document.getElementById("lbList");
-  status.textContent = "Loading..."; list.innerHTML = "";
-  try{
-    const res = await fetch("/api/leaderboard?limit=25");
-    if(!res.ok) throw new Error();
+  status.textContent = "Loading...";
+  list.innerHTML = "";
+  try {
+    const res = await fetch("/api/leaderboard?limit=25", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) throw new Error();
     const data = await res.json();
-    if(!data.entries || !data.entries.length){
+    if (!data.entries || !data.entries.length) {
       status.textContent = "No runs yet. Be the first.";
       return;
     }
-    status.textContent = `Top ${data.entries.length} runs, all-time`;
-    list.innerHTML = data.entries.map((e,i)=>{
-      const rankClass = i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"";
-      return `<div class="lb-row ${rankClass}">
-        <div class="lb-rank">#${i+1}</div>
-        <div class="lb-name">${escapeHtml(e.name)}</div>
-        <div class="lb-score">${e.score.toLocaleString()}</div>
+    status.textContent = data.hasLegacy
+      ? `Top ${data.entries.length} players · legacy runs preserved`
+      : `Top ${data.entries.length} players, all-time`;
+    list.innerHTML = data.entries.map((e, i) => {
+      const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
+      const currentClass = e.isCurrent ? " is-current" : "";
+      const legacyClass = e.legacy ? " is-legacy" : "";
+      const legacyTag = e.legacy ? `<span class="lb-legacy">LEGACY</span>` : "";
+      return `<div class="lb-row ${rankClass}${currentClass}${legacyClass}">
+        <div class="lb-rank">#${i + 1}</div>
+        <div class="lb-name">${escapeHtml(e.name)}${legacyTag}</div>
+        <div class="lb-score">${Number(e.score).toLocaleString()}</div>
       </div>`;
     }).join("");
-  }catch(e){
+    if (data.yourRank && data.yourName) {
+      const alreadyVisible = data.entries.some(e => e.isCurrent);
+      const yourRow = alreadyVisible
+        ? ""
+        : `<div class="lb-your-rank"><span>YOUR RANK</span><b>#${data.yourRank}</b><strong>${escapeHtml(data.yourName)}</strong><em>${Number(data.yourScore || 0).toLocaleString()}</em></div>`;
+      if (yourRow) list.insertAdjacentHTML("beforeend", yourRow);
+    }
+  } catch (e) {
     status.textContent = "Couldn't load the leaderboard — check back later.";
   }
 }
 
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
-document.getElementById("btnLeaderboard")?.addEventListener("click", ()=>{
+document.getElementById("btnLeaderboard")?.addEventListener("click", () => {
   SFX.ui();
   show(scLeaderboard);
   paintDomMark("markLeaderboard", 0.55, Theme.colors().cade, Theme.colors().bg);
   fetchLeaderboard();
 });
-document.getElementById("btnLbBack")?.addEventListener("click", ()=>{
+document.getElementById("btnLbBack")?.addEventListener("click", () => {
   SFX.ui();
   show(scTitle);
 });
