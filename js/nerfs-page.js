@@ -2,11 +2,11 @@
    Roster UI + fair hunter AI. Character art is procedural canvas art, so
    the page has no external PFP dependency or broken image path to fail on Vercel.
 */
-import { Game } from "./main.js";
+import { Game, ctx } from "./main.js";
 import { Teams, TEAM_ROSTER } from "./teams.js";
 import { Player } from "./player.js";
 import { CFG, clamp, TAU } from "./config.js";
-import { startRun, show } from "./ui.js";
+import { startRun } from "./ui.js";
 
 const screen = document.getElementById("scNerfs");
 const grid = document.getElementById("nerfsGrid");
@@ -23,12 +23,12 @@ const X = {
 };
 
 const PROFILE = {
-  steve:    { weapon:"BAT",      color:"#FC8400", style:"melee",    speed:1.08, ideal:78,  wiggle:0.15 },
-  gnar:     { weapon:"BLASTER",  color:"#00C2FF", style:"ranged",   speed:0.82, ideal:205, wiggle:0.55 },
-  kosgood:  { weapon:"BOW",      color:"#FF2D9E", style:"ranged",   speed:0.94, ideal:165, wiggle:0.80 },
-  scotty:   { weapon:"HAMMER",   color:"#8A8F98", style:"melee",    speed:0.76, ideal:95,  wiggle:0.10 },
-  rookmate: { weapon:"RAILGUN",  color:"#F0F024", style:"sniper",   speed:0.70, ideal:275, wiggle:0.25 },
-  poppunk:  { weapon:"KATANA",   color:"#7DE8FF", style:"hybrid",   speed:1.00, ideal:125, wiggle:1.05 }
+  steve:    { weapon:"BAT",      color:"#FC8400", speed:1.08, ideal:78,  wiggle:0.15 },
+  gnar:     { weapon:"BLASTER",  color:"#00C2FF", speed:0.82, ideal:205, wiggle:0.55 },
+  kosgood:  { weapon:"BOW",      color:"#FF2D9E", speed:0.94, ideal:165, wiggle:0.80 },
+  scotty:   { weapon:"HAMMER",   color:"#8A8F98", speed:0.76, ideal:95,  wiggle:0.10 },
+  rookmate: { weapon:"RAILGUN",  color:"#F0F024", speed:0.70, ideal:275, wiggle:0.25 },
+  poppunk:  { weapon:"KATANA",   color:"#7DE8FF", speed:1.00, ideal:125, wiggle:1.05 }
 };
 
 function css(){
@@ -99,15 +99,13 @@ function render(){
 }
 render();
 
-/* HOW TO PLAY -> ROSTER. Capture phase prevents ui.js's old handler from
-   jumping straight into a run. */
 document.getElementById("btnHowToPlayBack")?.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();switchScreen(screen)},true);
 document.getElementById("btnNerfsBack")?.addEventListener("click",e=>{e.preventDefault();switchScreen(how)},false);
-document.getElementById("btnNerfsStart")?.addEventListener("click",e=>{e.preventDefault();startRun();},false);
+document.getElementById("btnNerfsStart")?.addEventListener("click",e=>{e.preventDefault();screen.classList.remove("on","first-in");startRun();},false);
 
-/* HUNTER AI. The core Teams system already owns spawn/collision/nerf/respawn.
-   We add a bounded steering layer after its normal movement. All six hunt
-   immediately, but each archetype has a readable preferred distance. */
+/* HUNTER AI. The core Teams system still owns spawn/collision/nerf/respawn.
+   This bounded steering layer makes all six hunt immediately while each
+   archetype keeps a readable preferred distance. */
 const originalUpdate=Teams.update.bind(Teams);
 Teams.update=function(dt){
   originalUpdate(dt);
@@ -118,33 +116,34 @@ Teams.update=function(dt){
     const p=PROFILE[t.roster.id]||PROFILE.steve;
     const dx=Player.x-t.x,dy=Player.y-t.y,d=Math.hypot(dx,dy)||1;
     const nx=dx/d,ny=dy/d;
-    let tx=nx,ty=ny;
-    const orbit=Math.sin(t.age*1.8+(t.roster.id.length*1.7))*p.wiggle;
+    const orbit=Math.sin(t.age*1.8+t.roster.id.length*1.7)*p.wiggle;
     const ox=-ny*orbit,oy=nx*orbit;
+    let tx,ty;
     if(d>p.ideal+45){tx=nx+ox*.38;ty=ny+oy*.38}
     else if(d<p.ideal-45){tx=-nx+ox*.20;ty=-ny+oy*.20}
     else {tx=ox;ty=oy}
     const mag=Math.hypot(tx,ty)||1;tx/=mag;ty/=mag;
     const speed=CFG.TEAM_SPEED[1]*p.speed*scale;
     const blend=clamp(dt*2.4,0,1);
-    t.vx += (tx*speed-t.vx)*blend;t.vy += (ty*speed-t.vy)*blend;
+    t.vx+=(tx*speed-t.vx)*blend;t.vy+=(ty*speed-t.vy)*blend;
     t.x=clamp(t.x+t.vx*dt,t.r,innerWidth-t.r);t.y=clamp(t.y+t.vy*dt,t.r,innerHeight-t.r);
   }
 };
 
-/* Draw weapon props over the existing character silhouettes. The original
-   draw routine remains responsible for all character rendering. */
 const originalDraw=Teams.draw.bind(Teams);
 Teams.draw=function(){
   originalDraw();
   for(const t of this.pool){
     if(!t.on||t.disabled||!t.roster)continue;
     const p=PROFILE[t.roster.id]||PROFILE.steve;
-    const g=document.getElementById("cv")?.getContext("2d");if(!g)continue;
-    g.save();g.translate(t.x,t.y);weapon(g,p,t.r,t.age);g.restore();
+    ctx.save();ctx.translate(t.x,t.y);weapon(ctx,p,t.r,t.age);ctx.restore();
   }
 };
 
-/* Keep the six roster portraits subtly alive while the screen is open. */
-let raf=0;function animateRoster(){if(screen.classList.contains("on")){grid.querySelectorAll(".nerf-portrait").forEach((c,i)=>{const d=TEAM_ROSTER[i];if(d)portrait(c,d,i)});}raf=requestAnimationFrame(animateRoster)}animateRoster();
+let raf=0;
+function animateRoster(){
+  if(screen.classList.contains("on"))grid.querySelectorAll(".nerf-portrait").forEach((c,i)=>{const d=TEAM_ROSTER[i];if(d)portrait(c,d,i)});
+  raf=requestAnimationFrame(animateRoster);
+}
+animateRoster();
 window.addEventListener("resize",()=>{if(screen.classList.contains("on"))render()},{passive:true});
