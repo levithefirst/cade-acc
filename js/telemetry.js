@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — telemetry.js
+   CADE OPS — telemetry.js
    Deliberately crude, per the brief: "even crude" telemetry to watch
    what actual players do with the current player-alone-vs-6-targets
    loop, before any structural changes (character select, teammates,
@@ -12,9 +12,9 @@
    Open devtools console. Every run automatically logs a table when
    it ends. To see aggregate stats across every run logged so far on
    this device, type in the console:
-       CadeNerfTelemetry.report()
+       CadeOpsTelemetry.report()
    To wipe accumulated history and start fresh:
-       CadeNerfTelemetry.clear()
+       CadeOpsTelemetry.clear()
 
    Tracks (per the required list): nerfs per run, unique teams nerfed,
    full-roster completion, dash attempts/hits/hit-rate, nerfs by
@@ -127,7 +127,7 @@ export const Telemetry = {
   },
 
   _logSummary(s){
-    console.log("%c[CADE NERF] Run complete — telemetry logged", "color:#FC8400;font-weight:bold");
+    console.log("%c[CADE OPS] Run complete — telemetry logged", "color:#FC8400;font-weight:bold");
     console.table(s);
     console.log("Nerfs by character:", s.nerfsByCharacter);
   },
@@ -136,13 +136,13 @@ export const Telemetry = {
   // "nerfs per run" distribution is the single most important number
   // per the playtest brief
   report(){
-    if(!this.history.length){ console.log("[CADE NERF] No runs logged yet — play a round first."); return null; }
+    if(!this.history.length){ console.log("[CADE OPS] No runs logged yet — play a round first."); return null; }
     const n = this.history.length;
     const avg = key => +(this.history.reduce((a,r)=>a+(r[key]||0),0)/n).toFixed(2);
     const nerfCounts = this.history.map(r=>r.nerfs).sort((a,b)=>a-b);
     const median = nerfCounts[Math.floor(n/2)];
 
-    console.log(`%c[CADE NERF] Aggregate across ${n} run${n===1?"":"s"}`, "color:#FC8400;font-weight:bold");
+    console.log(`%c[CADE OPS] Aggregate across ${n} run${n===1?"":"s"}`, "color:#FC8400;font-weight:bold");
     console.table({
       "avg nerfs/run":            avg("nerfs"),
       "median nerfs/run":         median,
@@ -161,11 +161,11 @@ export const Telemetry = {
     return this.history;
   },
 
-  clear(){ this.history = []; this._persist(); console.log("[CADE NERF] Telemetry history cleared."); },
+  clear(){ this.history = []; this._persist(); console.log("[CADE OPS] Telemetry history cleared."); },
 };
 
 Telemetry._load();
 
 // exposed globally so it's reachable from devtools console during a
 // playtest session without needing to dig through the module graph
-if(typeof window !== "undefined") window.CadeNerfTelemetry = Telemetry;
+if(typeof window !== "undefined") window.CadeOpsTelemetry = Telemetry;

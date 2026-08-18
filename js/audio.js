@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — audio.js
+   CADE OPS — audio.js
    100% procedural Web Audio — zero external audio files, so there's
    nothing here to license. Haptics (navigator.vibrate) fires alongside
    SFX at the same event boundaries, feature-checked and silent where

@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — config.js
+   CADE OPS — config.js
    All tunable constants + static data tables. Zero dependencies,
    imported by everything else.
 
@@ -112,7 +112,7 @@ export const RANKS = [
 
 export const RUG_TYPES = {
   // speeds calibrated via simulation (0.86x of the original punishing curve)
-  // — rugs are kept as SECONDARY hazards in CADE NERF per the brief.
+  // — rugs are kept as SECONDARY hazards in CADE OPS per the brief.
   DUMP:        {r:38, speed:[95,142],  col:"#FF2A2A", label:"DUMP",  w:2.3, h:0.7},
   WICK:        {r:9,  speed:[361,482], col:"#FF5A5A", label:"WICK",  w:0.35,h:3.4},
   LIQUIDATION: {r:17, speed:[129,163], col:"#FF3D6E", label:"LIQ",   w:1,   h:1},

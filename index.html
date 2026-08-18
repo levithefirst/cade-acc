@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>CADE NERF — 60 Seconds. Nerf the Arena.</title>
+<title>CADE OPS — Dash. Nerf. Dominate.</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,15 +17,11 @@
   <canvas class="brandmark brandmark-title" id="markTitle"></canvas>
   <div class="tagline">CadeMarket presents</div>
   <div class="spotlight-beam" aria-hidden="true"></div>
-  <h1 class="wordmark"><span class="a">CADE</span><br><span class="b" data-text="NERF">NERF</span></h1>
-  <div class="tagline">60 seconds &nbsp;/&nbsp; nerf the arena</div>
-  <p class="rules">
-    Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br>
-    <span class="k">SPACE</span> / <span class="k">⚡ button</span> = <b>APE DASH</b>. Dash through a team leader to <b>nerf</b> them.<br>
-    You've got <b>3 lives</b>. Touching a team or a rug without dashing costs a life. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>
-    Green pumps pay out multiplied — <b>3 in a row</b> fills your energy bar for a speed boost.<br>
-    <b>Nerf as many teams as you can before the buzzer.</b>
-  </p>
+  <h1 class="wordmark"><span class="a">CADE</span><br><span class="b" data-text="OPS">OPS</span></h1>
+  <div class="tagline tagline-sharp">Dash. Nerf. Dominate.</div>
+
+  <canvas id="roster-showcase" aria-label="The six Cade Ops characters"></canvas>
+
   <button class="btn" id="btnStart">Ape In</button>
   <div class="row">
     <div class="hs" id="tHigh"></div>
@@ -40,12 +36,6 @@
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
       </svg>
     </button>
-  </div>
-  <div class="row">
-    <div class="name-group">
-      <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
-      <div class="name-hint" id="nameHint"></div>
-    </div>
     <button class="btn ghost" id="btnLeaderboard">🏆 Leaderboard</button>
   </div>
 </div>
@@ -53,8 +43,12 @@
 <!-- ============ LEADERBOARD ============ -->
 <div class="screen" id="scLeaderboard">
   <canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas>
-  <div class="eyebrow">Cade Nerf</div>
+  <div class="eyebrow">Cade Ops</div>
   <div class="rank">GLOBAL LEADERBOARD</div>
+  <div class="name-group">
+    <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
+    <div class="name-hint" id="nameHint"></div>
+  </div>
   <div class="ranksub" id="lbStatus">Loading...</div>
   <div class="lb-list glass" id="lbList"></div>
   <div class="row">
@@ -65,7 +59,7 @@
 <!-- ============ RESULTS ============ -->
 <div class="screen" id="scEnd">
   <canvas class="brandmark brandmark-end" id="markEnd"></canvas>
-  <div class="eyebrow">Cade Nerf</div>
+  <div class="eyebrow">Cade Ops</div>
   <div class="verdict" id="eVerdict">WIPED</div>
   <div>
     <div class="scorelabel">Final bag</div>

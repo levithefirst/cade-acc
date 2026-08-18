@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — ui.js
+   CADE OPS — ui.js
    HUD, screen management, and the results flow. The one deliberate
    restructure from CADE RUSH: the brief calls for "HUD prioritizes
    NERFS count," so the top-left hero number is now Nerfs, with Bag
@@ -306,14 +306,15 @@ document.getElementById("btnAgain")?.addEventListener("click", ()=>{ SFX.ui(); s
 dashBtn.addEventListener("touchstart", e=>{ e.preventDefault(); SFX.unlock(); Input.dashQueued=true; },{passive:false});
 dashBtn.addEventListener("mousedown", e=>{ e.preventDefault(); Input.dashQueued=true; });
 
-// title screen high score line
-(function(){
+// title screen high score line — deferred, see initUI() below and
+// main.js's boot sequence for why this can't run eagerly
+export function paintTitleHighScore(){
   const s = Store.read();
   const el = document.getElementById("tHigh");
   if(el) el.innerHTML = s.high
     ? `Best <b>${s.high.toLocaleString()}</b> &nbsp;·&nbsp; ${s.bestNerfs||0} nerfs &nbsp;·&nbsp; ${s.runs} runs`
     : `No runs yet. Coward.`;
-})();
+}
 
 /* ============================================================
    RANKS — rebuilt around Teams Nerfed, the new headline metric.
@@ -358,7 +359,7 @@ export function buildTweet(score, rank, st){
   const nerfs = st.nerfs||0;
 
   const hookPool = [
-    `Nerfed ${nerfs} teams in 60 seconds. CADE NERF is unforgiving.`,
+    `Nerfed ${nerfs} teams in 60 seconds. CADE OPS is unforgiving.`,
     `${nerfs} teams down. The arena is not safe.`,
   ];
   const bracketPool = {
@@ -373,11 +374,11 @@ export function buildTweet(score, rank, st){
     pick(hookPool),
     pick(bracketPool),
     "",
-    `CADE NERF — ${score.toLocaleString()} pts · ${rank} · ${nerfs} nerfed`,
+    `CADE OPS — ${score.toLocaleString()} pts · ${rank} · ${nerfs} nerfed`,
     `Max multi ${Game.bestMulti.toFixed(2)}x · ${st.grazes} close calls · ${st.shredded} rugs shredded`,
     "",
     pick(ctaPool),
-    "@CadeMarket #CadeNerf"
+    "@CadeMarket #CadeOps"
   ];
   return lines.join("\n");
 }
@@ -483,6 +484,33 @@ export function paintDomMarks(){
   paintDomMark("markEnd", 0.10, tc.cade, tc.bg);
 }
 
+// title-screen character showcase — draws the real 6 roster silhouettes
+// using their actual in-game draw() functions from teams.js. Zero new
+// art: whatever you see here is pixel-identical to what appears in a
+// real match, just laid out in a static row instead of roaming the arena.
+export function paintRosterShowcase(){
+  const c = document.getElementById("roster-showcase"); if(!c) return;
+  const rect = c.getBoundingClientRect();
+  const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+  c.width = w*DPR; c.height = h*DPR;
+  const g = c.getContext("2d");
+  g.setTransform(DPR,0,0,DPR,0,0);
+  g.clearRect(0,0,w,h);
+
+  const n = TEAM_ROSTER.length;
+  const slot = w/n;
+  const r = Math.min(slot*0.34, h*0.34);
+  TEAM_ROSTER.forEach((def, i)=>{
+    const cx = slot*i + slot/2, cy = h/2;
+    g.save();
+    g.translate(cx, cy);
+    // fake team-instance object — same shape draw() expects at runtime,
+    // just static (age=0, not disabled) since this is a display, not play
+    def.draw(g, {r, disabled:false, age:0}, 1);
+    g.restore();
+  });
+}
+
 export function toggleTheme(){
   const next = Theme.mode==="light" ? "dark" : "light";
   Theme.apply(next);
@@ -498,12 +526,12 @@ function setSoundIcon(on){
   if(soundLabel) soundLabel.textContent = on ? "Sound On" : "Sound Off";
   if(soundIconSvg) soundIconSvg.style.opacity = on ? "1" : "0.4";
 }
-(function initSound(){
+export function initSound(){
   const s = Store.read();
   const on = s.sound!==false;
   SFX.setEnabled(on); Music.setEnabled(on);
   setSoundIcon(on);
-})();
+}
 btnSound?.addEventListener("click", ()=>{
   const next = !SFX.isEnabled();
   SFX.setEnabled(next); Music.setEnabled(next);
@@ -513,14 +541,14 @@ btnSound?.addEventListener("click", ()=>{
   else Music.stop(0.2);
 });
 
-(function initTheme(){
+export function initTheme(){
   const s = Store.read();
   let mode = s.theme;
   if(mode!=="dark" && mode!=="light"){
     mode = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   }
   Theme.apply(mode);
-})();
+}
 
 /* ============================================================
    SHARE ON X / COPY TWEET
@@ -528,7 +556,7 @@ btnSound?.addEventListener("click", ()=>{
 document.getElementById("btnShareX")?.addEventListener("click", ()=>{
   SFX.ui();
   const txt = document.getElementById("eTweet").textContent;
-  const liveUrl = location.protocol.startsWith("http") ? location.href : "https://cade-nerf.vercel.app";
+  const liveUrl = location.protocol.startsWith("http") ? location.href : "https://cade-ops.vercel.app";
   const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}&url=${encodeURIComponent(liveUrl)}`;
   window.open(intent, "_blank", "noopener,noreferrer");
 });
@@ -584,7 +612,7 @@ function buildShareCard(){
 
   g.textAlign="left";
   g.fillStyle=tc.cade; g.font="700 26px ui-monospace, monospace";
-  g.fillText("CADE NERF", 70, 80);
+  g.fillText("CADE OPS", 70, 80);
 
   g.fillStyle = Game.survivedFinal ? "#3DC96B" : "#FF2A2A";
   g.font="900 52px Arial Black, Impact, sans-serif";
@@ -617,7 +645,7 @@ function buildShareCard(){
   });
 
   g.fillStyle="#4E4E5E"; g.font="700 22px ui-monospace, monospace"; g.textAlign="left";
-  g.fillText(`CADE NERF · 60-second arena · @CadeMarket #CadeNerf`, 70, ch-70);
+  g.fillText(`CADE OPS · 60-second arena · @CadeMarket #CadeOps`, 70, ch-70);
 
   return c;
 }
@@ -635,7 +663,7 @@ document.getElementById("btnCard")?.addEventListener("click", e=>{
   const c = buildShareCard();
   const score = Math.round(Game.score);
   const a = document.createElement("a");
-  a.download = `cade-nerf-${score}.png`;
+  a.download = `cade-ops-${score}.png`;
   a.href = c.toDataURL("image/png");
   document.body.appendChild(a); a.click(); a.remove();
   btn.textContent="Saved";

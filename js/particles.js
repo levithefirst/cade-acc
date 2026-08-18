@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — particles.js
+   CADE OPS — particles.js
    Every pooled, zero-per-frame-allocation visual system: the FX
    feedback bus (shake/glitch/flash/invert/chroma/vignette), particles,
    shockwave rings, floating score text, and the title-screen ambient
@@ -173,4 +173,9 @@ export const Ambient = {
     ctx.globalAlpha=1;
   }
 };
-Ambient.init();
+// NOTE: Ambient.init() is intentionally NOT called here. particles.js is
+// imported early in main.js's circular import chain, before main.js's own
+// body has reached its `let W,H,S` assignments — calling init() here would
+// read those while still in their temporal dead zone. main.js calls
+// Ambient.init() explicitly, later, once it's actually safe. See main.js's
+// boot sequence at the bottom of the file.

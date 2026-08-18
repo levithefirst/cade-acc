@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — main.js
+   CADE OPS — main.js
    HOW TO RUN: serve this folder over HTTP (ES modules can't load from
    file://). Locally: `npx serve .` or `python3 -m http.server`, then
    open index.html. On Vercel: zero config, it just deploys — the /api
@@ -38,7 +38,7 @@ import { SFX, Music, Haptics, AudioCore } from "./audio.js";
 import {
   drawTimer, drawHUD, drawFreeze, drawOut, drawFinalRug,
   dashBtn, paintDomMarks, startRun, showResults,
-  paintTitleHighScore, initSound, initTheme
+  paintTitleHighScore, initSound, initTheme, paintRosterShowcase
 } from "./ui.js";
 import { initPlayerName } from "./leaderboard.js";
 
@@ -770,6 +770,9 @@ function frame(now){
 Ambient.init();
 paintTitleHighScore();
 initTheme();   // also paints the brand marks via Theme.apply() -> paintDomMarks()
+paintRosterShowcase();
+window.addEventListener("resize", paintRosterShowcase, {passive:true});
+window.addEventListener("orientationchange", ()=>setTimeout(paintRosterShowcase,120));
 initSound();
 initPlayerName();
 

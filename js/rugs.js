@@ -1,6 +1,6 @@
 /* ============================================================
-   CADE NERF — rugs.js
-   Rugs kept as SECONDARY hazards per the CADE NERF brief — the primary
+   CADE OPS — rugs.js
+   Rugs kept as SECONDARY hazards per the CADE OPS brief — the primary
    threat/objective is now the Teams system (teams.js). This module is
    an unmodified port: same five archetypes (DUMP/WICK/LIQUIDATION/
    FAKEOUT/WHALE), same calibrated speeds, same graze/dash-kill logic.

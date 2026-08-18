@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — teams.js
+   CADE OPS — teams.js
    The core new system. Six AI-controlled "team leader" characters roam
    the arena; the player's job is to nerf as many as possible in 60s.
 

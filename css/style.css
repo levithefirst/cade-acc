@@ -132,6 +132,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 }
 @media (prefers-reduced-motion:reduce){.spotlight-beam{opacity:.6}}
 .tagline{font-size:clamp(11px,2.6vw,14px);letter-spacing:var(--ls-widest);color:var(--dim);text-transform:uppercase}
+.tagline-sharp{
+  font-size:clamp(14px,3.4vw,18px);color:var(--white);font-weight:600;
+  letter-spacing:var(--ls-normal);text-transform:none;margin-top:2px;
+}
+#roster-showcase{width:min(92vw,440px);height:64px;margin:6px 0 2px;display:block}
 .rules{max-width:520px;font-size:14px;line-height:1.9;color:var(--dim);font-family:var(--ui);
   text-align:left;
   padding:16px 20px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(160%);

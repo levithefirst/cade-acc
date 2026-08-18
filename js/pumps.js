@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — pumps.js
+   CADE OPS — pumps.js
    Unmodified port. Pumps still work exactly as before: collect for
    score (multiplied), 3-in-a-row fills the energy meter for a speed
    boost (see player.js / main.js's Game.collisions()).

@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — player.js
+   CADE OPS — player.js
    Movement, Ape Dash, iframes, and the energy-boost speed multiplier.
    Unmodified from CADE RUSH — the movement tuning here was deliberately
    tightened for a "direct control" feel (not floaty) and the top speed

@@ -1,5 +1,5 @@
 /* ============================================================
-   CADE NERF — leaderboard.js
+   CADE OPS — leaderboard.js
    Player name (10-char minimum, capped at 2 lifetime changes) plus the
    global leaderboard fetch/submit. Talks to /api/submit-score and
    /api/leaderboard (unchanged from CADE RUSH — score submission is
