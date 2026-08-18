@@ -101,14 +101,14 @@ export const Music=(()=>{
   function scheduleStep(step,t){
     const ctx=AudioCore.ctx,chord=CHORDS[barIndex%CHORDS.length],root=chord[0]/2;
     if(step%4===0)kick(ctx,t,step===0);
-    if(step===4||step===12)snare(ctx,t,intensity==="meltdown"?.23:.18);
-    if(step%2===1||intensity==="meltdown")hat(ctx,t,intensity==="meltdown"?.105:.065);
+    if(step===4||step===12)snare(ctx,t,intensity==="meltdown" ? .23 : .18);
+    if(step%2===1||intensity==="meltdown")hat(ctx,t,intensity==="meltdown" ? .105 : .065);
     const bass=BASS[(barIndex*2+Math.floor(step/2))%BASS.length];
-    if(step%2===0||intensity==="meltdown")osc(ctx,bass,t,.16,"sawtooth",intensity==="calm"?.07:.13,900);
+    if(step%2===0||intensity==="meltdown")osc(ctx,bass,t,.16,"sawtooth",intensity==="calm" ? .07 : .13,900);
     if(intensity!=="calm"&&(step===3||step===7||step===11||step===15))osc(ctx,bass*2,t,.09,"square",.055,1600);
     if(intensity!=="calm"){
       const lead=LEAD[(barIndex*2+step)%LEAD.length];
-      if(step%2===0||intensity==="meltdown")osc(ctx,lead,t,.095,"triangle",intensity==="meltdown"?.065:.035,2400);
+      if(step%2===0||intensity==="meltdown")osc(ctx,lead,t,.095,"triangle",intensity==="meltdown" ? .065 : .035,2400);
       if(step%4===2)osc(ctx,chord[1],t,.13,"square",.028,1800);
     }
     if(step===15)barIndex++;
