@@ -2,48 +2,38 @@
    CADE OPS — config.js
    All tunable constants + static data tables. Zero dependencies,
    imported by everything else.
-
-   IMPORTANT: the CFG block below is carried over byte-for-byte from
-   CADE RUSH. Those numbers (SPAWN_RATE_*, PLAYER_*, LIVES, ENERGY_*,
-   HITSTOP_*, etc.) were calibrated against a headless hit-probability
-   simulation targeting: average play dies ~30-35s, skilled play has a
-   real shot at a clean 60s run. Don't hand-tune these without re-running
-   that check — see the project notes handed to you alongside this file.
    ============================================================ */
 
 export const CFG = {
   RUN_SECONDS:      60,
-  MELTDOWN_AT:      15,     // seconds remaining when chaos starts
-  FREEZE_SECONDS:   1.15,   // "YOU SURVIVED" hold at 0:00
-  FINAL_RUG_WINDOW: 2.2,    // time to dodge the surprise final rug
-  LIVES:            3,      // hits to survive before an early "RUGGED OUT"
+  MELTDOWN_AT:      15,
+  FREEZE_SECONDS:   1.15,
+  FINAL_RUG_WINDOW: 2.2,
+  LIVES:            6,
 
   PLAYER_R:         13,
-  PLAYER_ACCEL:     4200,   // keyboard
-  POINTER_ACCEL:    5400,   // mouse/touch
-  PLAYER_MAXV:      620,    // dodge-vs-hazard speed balance — calibrated, do not touch casually
+  PLAYER_ACCEL:     4200,
+  POINTER_ACCEL:    5400,
+  PLAYER_MAXV:      620,
   PLAYER_DRAG:      0.80,
-  POINTER_DEADZONE: 4,      // px before pointer pull kicks in, kills micro-jitter
-  POINTER_EASE:     70,     // px over which pointer pull ramps to full strength
-  TOUCH_OFFSET_Y:   70,     // player sits above the finger, not under it
+  POINTER_DEADZONE: 4,
+  POINTER_EASE:     70,
+  TOUCH_OFFSET_Y:   70,
 
   DASH_TIME:        0.30,
   DASH_SPEED:       1250,
   DASH_COOLDOWN:    2.2,
 
-  // pump energy meter — 3 pumps collected without a hit in between fills
-  // it; full bar triggers a temporary speed boost that drains back down
-  // over ENERGY_DRAIN_TIME, then resets to earning it from zero again.
   ENERGY_FILL_PUMPS:  3,
   ENERGY_DRAIN_TIME:  5,
   ENERGY_BOOST_MULT:  1.3,
 
-  NEAR_BAND:        15,     // graze distance beyond hitboxes
+  NEAR_BAND:        15,
   MULTI_STEP:       0.25,
   MULTI_MAX:        15,
-  MULTI_GRACE:      1.4,    // seconds before decay begins
-  MULTI_DECAY:      0.30,   // per second
-  MULTI_HIT_KEEP:   0.25,   // fraction kept on hit (hard reset)
+  MULTI_GRACE:      1.4,
+  MULTI_DECAY:      0.30,
+  MULTI_HIT_KEEP:   0.25,
 
   PUMP_R:           16,
   PUMP_BASE:        30,
@@ -81,23 +71,16 @@ export const CFG = {
   SPAWN_RATE_MID:       0.88,
   SPAWN_RATE_MELT_END:  0.32,
 
-  STORE_KEY:        "cadenerf.v1", // new game, new save slot — doesn't collide with CADE RUSH's saved data
+  STORE_KEY:        "cadenerf.v1",
 
-  /* ============================================================
-     TEAMS — placeholder tuning, NOT calibrated yet.
-     These exist so teams.js has something to read while it's a stub.
-     Once real characters + real playtesting happen, these need the
-     same simulation-backed treatment the hazard curve above got —
-     right now they're reasonable starting guesses, nothing more.
-     ============================================================ */
-  MAX_TEAMS:          16,   // pool size, mirrors MAX_RUGS's pattern
-  TEAM_COUNT_ACTIVE:  6,    // how many teams are "in play" at once — placeholder
-  TEAM_R:             16,   // placeholder hitbox radius, will vary per-character later
-  TEAM_SPEED:         [70,130], // placeholder roam speed range
-  TEAM_NERF_SCORE:    150,  // placeholder score award on a successful nerf
-  TEAM_NERF_MULTI_BONUS: 0.5, // placeholder multiplier bump on nerf, mirrors GRAZE_BASE's role
-  TEAM_DISABLE_TIME:  4,    // seconds a nerfed team stays down before respawning
-  TEAM_RESPAWN_DELAY: 1.5,  // seconds after disable-time ends before it re-enters play
+  MAX_TEAMS:          16,
+  TEAM_COUNT_ACTIVE:  6,
+  TEAM_R:             16,
+  TEAM_SPEED:         [70,130],
+  TEAM_NERF_SCORE:    150,
+  TEAM_NERF_MULTI_BONUS: 0.5,
+  TEAM_DISABLE_TIME:  4,
+  TEAM_RESPAWN_DELAY: 1.5,
 };
 
 export const RANKS = [
@@ -111,11 +94,6 @@ export const RANKS = [
 ];
 
 export const RUG_TYPES = {
-  // speeds calibrated via simulation (0.86x of the original punishing curve)
-  // — rugs are kept as SECONDARY hazards in CADE OPS per the brief.
-  // trailFX: the per-archetype secondary motion cue every synthesis
-  // response asked for — read the threat TYPE from color/motion alone,
-  // not just shape/speed, even in high density
   DUMP:        {r:38, speed:[95,142],  col:"#FF2A2A", label:"DUMP",  w:2.3, h:0.7, trailFX:"ember"},
   WICK:        {r:9,  speed:[361,482], col:"#FF5A5A", label:"WICK",  w:0.35,h:3.4, trailFX:"jagged"},
   LIQUIDATION: {r:17, speed:[129,163], col:"#FF3D6E", label:"LIQ",   w:1,   h:1,   trailFX:"lockring"},
@@ -123,9 +101,6 @@ export const RUG_TYPES = {
   WHALE:       {r:66, speed:[45,62],   col:"#8A1020", label:"WHALE", w:1.6, h:1.1, trailFX:"vortex"}
 };
 
-/* ============================================================
-   Shared pure utilities — no DOM/canvas access, safe to import anywhere.
-   ============================================================ */
 export const rnd   = (a,b)=>a+Math.random()*(b-a);
 export const rint  = (a,b)=>Math.floor(rnd(a,b+1));
 export const clamp = (v,a,b)=>v<a?a:v>b?b:v;
@@ -133,7 +108,6 @@ export const lerp  = (a,b,t)=>a+(b-a)*t;
 export const pick  = arr=>arr[(Math.random()*arr.length)|0];
 export const TAU   = Math.PI*2;
 
-// lighten/darken a hex color by a fraction — used for rug/team bevel gradients
 export function shadeColor(hex, pct){
   const num = parseInt(hex.slice(1),16);
   const amt = Math.round(255*pct);
