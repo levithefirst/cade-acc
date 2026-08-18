@@ -137,6 +137,14 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   letter-spacing:var(--ls-normal);text-transform:none;margin-top:2px;
 }
 #roster-showcase{width:min(92vw,440px);height:64px;margin:6px 0 2px;display:block}
+.howtoplay-btn{
+  background:none!important;border:none!important;box-shadow:none!important;
+  color:var(--dim)!important;font-size:12px!important;letter-spacing:var(--ls-normal)!important;
+  padding:6px 10px!important;text-transform:none!important;font-family:var(--ui)!important;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.howtoplay-btn::after{display:none}
+.howtoplay-btn:hover{color:var(--white)!important}
 .rules{max-width:520px;font-size:14px;line-height:1.9;color:var(--dim);font-family:var(--ui);
   text-align:left;
   padding:16px 20px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(160%);

@@ -278,15 +278,19 @@ export function drawFinalRug(){
 export const scTitle = document.getElementById("scTitle");
 export const scEnd = document.getElementById("scEnd");
 export const scLeaderboard = document.getElementById("scLeaderboard");
+export const scHowToPlay = document.getElementById("scHowToPlay");
 export const dashBtn = document.getElementById("dashBtn");
 scTitle.classList.add("first-in");
 export const isTouchDevice = (window.matchMedia && matchMedia("(pointer:coarse)").matches) || "ontouchstart" in window;
 
 export function show(el){
-  [scTitle,scEnd,scLeaderboard].forEach(s=>s && s.classList.remove("on"));
+  [scTitle,scEnd,scLeaderboard,scHowToPlay].forEach(s=>s && s.classList.remove("on"));
   if(el) el.classList.add("on");
   dashBtn.classList.remove("show");
 }
+
+document.getElementById("btnHowToPlay")?.addEventListener("click", ()=>{ SFX.ui(); show(scHowToPlay); });
+document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); show(scTitle); });
 
 export function startRun(){
   show(null);

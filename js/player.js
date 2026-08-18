@@ -157,20 +157,41 @@ export const Player = {
       ctx.globalAlpha=1;
     }
 
-    // body
-    ctx.fillStyle = this.dash>0 ? "#FFFFFF" : "#FC8400";
-    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,TAU); ctx.fill();
-    ctx.lineWidth = 2*S; ctx.strokeStyle = this.dash>0 ? "#D96D00" : (Game.boosted ? tc.yellow : "#FFE9A8");
+    // body — a real operator silhouette, not a plain orb. Deliberately
+    // distinct from all 6 roster characters (a hooded tactical shape,
+    // not a smiley/blob head) so the player is never confused for one
+    // of the enemies on the field. Purely cosmetic — the hitbox is still
+    // exactly this.r, collisions never touched this function.
+    const bodyColor = this.dash>0 ? "#FFFFFF" : "#1A1A1E";
+    const accentColor = this.dash>0 ? "#D96D00" : (Game.boosted ? tc.yellow : "#FC8400");
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.r/13, this.r/13);
+
+    // hooded head + shoulders, one continuous silhouette
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(0, -1, 8, Math.PI, 0);
+    ctx.lineTo(6.5, 6.5);
+    ctx.quadraticCurveTo(0, 10.5, -6.5, 6.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.lineWidth = 1.5*S;
+    ctx.strokeStyle = accentColor;
     ctx.stroke();
 
-    // lightning bolt mark inside the body
-    ctx.save();
-    ctx.translate(this.x,this.y); ctx.scale(this.r/13,this.r/13);
-    ctx.fillStyle = "#0C0C0A";
+    // visor band — the "face," glows with the same accent as everything else
+    ctx.fillStyle = accentColor;
+    ctx.fillRect(-5.5, -3.2, 11, 2.6);
+
+    // chest emblem — the lightning bolt, relocated from a face-cutout to
+    // a chest mark so the silhouette itself can read as a person
+    ctx.globalAlpha = 0.85;
     ctx.beginPath();
-    ctx.moveTo(1.6,-7.5); ctx.lineTo(-4.6,1.0); ctx.lineTo(-0.6,1.0);
-    ctx.lineTo(-1.8,7.5); ctx.lineTo(4.6,-1.2); ctx.lineTo(0.6,-1.2);
+    ctx.moveTo(0.8,3); ctx.lineTo(-1.6,6.4); ctx.lineTo(-0.3,6.4);
+    ctx.lineTo(-0.9,9.6); ctx.lineTo(1.8,5.6); ctx.lineTo(0.5,5.6);
     ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.restore();
 
     // boost ring — a second, faster pulse outside the dash-ready ring,
