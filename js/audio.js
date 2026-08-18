@@ -57,7 +57,7 @@ export const SFX=(()=>{
     lifeLost(){tone(85,.32,"square",.26,38)},
     streak(n){[660,880,1100].forEach((f,i)=>setTimeout(()=>tone(f,.08,"square",.18),i*55))},
     boost(){tone(440,.10,"sawtooth",.16,1400);setTimeout(()=>tone(900,.14,"triangle",.20),60)},
-    tick(critical){tone(critical?880:660,.05,"square",critical?.20:.10)},
+    tick(critical){tone(critical?880:660,.05,"square",critical ? .20 : .10)},
     win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle",.20),i*70))},
     lose(){noise(.28,.26);tone(110,.36,"sawtooth",.22,48)},
     ui(){tone(500,.05,"square",.13)}
@@ -68,16 +68,7 @@ export const Music=(()=>{
   let enabled=true,gain=null,playing=false,timerID=null;
   let bpm=146,stepDur=0,step16=0,barIndex=0,nextNoteTime=0,intensity="calm";
   const LOOKAHEAD_MS=25,SCHEDULE_AHEAD=.14;
-
-  // Four original progressions. The rhythm section is deliberately denser
-  // than the previous straight kick/bass loop, with a halftime snare layer,
-  // syncopated bass and a small arcade lead. No external recording is used.
-  const CHORDS=[
-    [220,261.63,329.63],
-    [196,246.94,293.66],
-    [174.61,220,261.63],
-    [196,246.94,311.13]
-  ];
+  const CHORDS=[[220,261.63,329.63],[196,246.94,293.66],[174.61,220,261.63],[196,246.94,311.13]];
   const BASS=[55,55,65.41,73.42,55,55,65.41,82.41];
   const LEAD=[440,523.25,659.25,523.25,392,493.88,587.33,493.88];
 
@@ -100,8 +91,7 @@ export const Music=(()=>{
     const n=Math.floor(ctx.sampleRate*.085),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
     for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
     const src=ctx.createBufferSource();src.buffer=buf;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=1800;const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.085);
-    src.connect(hp);hp.connect(g);g.connect(gain);src.start(t);
-    osc(ctx,190,t,.055,"triangle",vol*.28,1100);
+    src.connect(hp);hp.connect(g);g.connect(gain);src.start(t);osc(ctx,190,t,.055,"triangle",vol*.28,1100);
   }
   function hat(ctx,t,vol){
     const n=Math.floor(ctx.sampleRate*.028),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
@@ -113,11 +103,9 @@ export const Music=(()=>{
     if(step%4===0)kick(ctx,t,step===0);
     if(step===4||step===12)snare(ctx,t,intensity==="meltdown"?.23:.18);
     if(step%2===1||intensity==="meltdown")hat(ctx,t,intensity==="meltdown"?.105:.065);
-
     const bass=BASS[(barIndex*2+Math.floor(step/2))%BASS.length];
     if(step%2===0||intensity==="meltdown")osc(ctx,bass,t,.16,"sawtooth",intensity==="calm"?.07:.13,900);
     if(intensity!=="calm"&&(step===3||step===7||step===11||step===15))osc(ctx,bass*2,t,.09,"square",.055,1600);
-
     if(intensity!=="calm"){
       const lead=LEAD[(barIndex*2+step)%LEAD.length];
       if(step%2===0||intensity==="meltdown")osc(ctx,lead,t,.095,"triangle",intensity==="meltdown"?.065:.035,2400);
@@ -135,8 +123,7 @@ export const Music=(()=>{
     start(level){
       if(level)intensity=level;if(!enabled)return;const ctx=ready();if(!ctx)return;
       if(playing){gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setValueAtTime(gain.gain.value,ctx.currentTime);gain.gain.linearRampToValueAtTime(.46,ctx.currentTime+.35);return}
-      stepDur=60/bpm/4;step16=0;barIndex=0;nextNoteTime=ctx.currentTime+.04;
-      gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.linearRampToValueAtTime(.46,ctx.currentTime+.45);playing=true;scheduler();
+      stepDur=60/bpm/4;step16=0;barIndex=0;nextNoteTime=ctx.currentTime+.04;gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.linearRampToValueAtTime(.46,ctx.currentTime+.45);playing=true;scheduler();
     },
     duck(target){const ctx=AudioCore.ctx;if(!ctx||!gain)return;gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setValueAtTime(gain.gain.value,ctx.currentTime);gain.gain.linearRampToValueAtTime(target,ctx.currentTime+.35)},
     stop(fade){if(!playing)return;const ctx=AudioCore.ctx;if(ctx&&gain){gain.gain.cancelScheduledValues(ctx.currentTime);gain.gain.setValueAtTime(gain.gain.value,ctx.currentTime);gain.gain.linearRampToValueAtTime(.0001,ctx.currentTime+(fade||.35))}playing=false;if(timerID)clearTimeout(timerID)}
