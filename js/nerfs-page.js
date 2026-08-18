@@ -1,12 +1,10 @@
 /* CADE OPS — THE 6 NERFS
-   Roster UI + character presentation. Combat behavior lives in combat-ai.js
-   so the game has one authoritative movement/attack system. */
+   Roster UI + character presentation. Combat behavior lives in combat-ai.js. */
 import "./combat-ai.js";
 import { Game, ctx } from "./main.js";
 import { Teams, TEAM_ROSTER } from "./teams.js";
-import { Player } from "./player.js";
-import { CFG, TAU } from "./config.js";
 import { startRun } from "./ui.js";
+import { TAU } from "./config.js";
 
 const screen = document.getElementById("scNerfs");
 const grid = document.getElementById("nerfsGrid");
@@ -23,12 +21,12 @@ const X = {
 };
 
 const PROFILE = {
-  steve:    { weapon:"BAT",      color:"#FC8400" },
-  gnar:     { weapon:"BLASTER",  color:"#00C2FF" },
-  kosgood:  { weapon:"BOW",      color:"#FF2D9E" },
-  scotty:   { weapon:"HAMMER",   color:"#8A8F98" },
-  rookmate: { weapon:"RAILGUN",  color:"#F0F024" },
-  poppunk:  { weapon:"KATANA",   color:"#7DE8FF" }
+  steve:    { weapon:"BAT",      color:"#FFA800" },
+  gnar:     { weapon:"BLASTER",  color:"#2F2F2F" },
+  kosgood:  { weapon:"BOW",      color:"#FFB514" },
+  scotty:   { weapon:"HAMMER",   color:"#FFFFFF" },
+  rookmate: { weapon:"RAILGUN",  color:"#FFB514" },
+  poppunk:  { weapon:"KATANA",   color:"#FFA800" }
 };
 
 function addPolishStylesheet(){
@@ -68,28 +66,50 @@ function weapon(g,p,r,phase=0,aim=0){
 
 function portrait(canvas,def,i){
   const p=PROFILE[def.id]||PROFILE.steve;
-  const dpr=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth||260,h=canvas.clientHeight||132;
+  const dpr=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth||260,h=canvas.clientHeight||150;
   canvas.width=w*dpr;canvas.height=h*dpr;
   const g=canvas.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
   const glow=g.createRadialGradient(w*.5,h*.46,0,w*.5,h*.46,h*.75);
   glow.addColorStop(0,`${p.color}35`);glow.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=glow;g.fillRect(0,0,w,h);
-  const r=Math.min(w,h)*.29;
-  g.save();g.translate(w*.48,h*.68);g.rotate(Math.sin(performance.now()/900+i)*.035);
+  const r=Math.min(w,h)*.27;
+  g.save();g.translate(w*.48,h*.66);g.rotate(Math.sin(performance.now()/900+i)*.035);
   def.draw(g,{r,disabled:false,age:performance.now()/1000+i},1);
   weapon(g,p,r,performance.now()/1000+i,0);
   g.restore();
-  g.fillStyle="rgba(255,255,255,.035)";g.fillRect(0,h*.82,w,h*.18);
-  g.fillStyle=p.color;g.globalAlpha=.65;g.fillRect(w*.08,h*.91,w*.84,2);g.globalAlpha=1;
+  g.fillStyle="rgba(255,255,255,.035)";g.fillRect(0,h*.83,w,h*.17);
+  g.fillStyle=p.color;g.globalAlpha=.65;g.fillRect(w*.08,h*.92,w*.84,2);g.globalAlpha=1;
+}
+
+function xIcon(){
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","http://www.w3.org/2000/svg");
+  svg.setAttribute("viewBox","0 0 24 24");svg.setAttribute("aria-hidden","true");svg.classList.add("x-icon-svg");
+  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d","M18.9 2H22l-6.77 7.74L23.2 22h-6.24l-4.88-6.38L6.5 22H3.4l7.24-8.28L3 2h6.4l4.4 5.82L18.9 2Zm-1.1 17.8h1.73L8.46 4.08H6.6L17.8 19.8Z");
+  svg.appendChild(path);return svg;
 }
 
 function render(){
   grid.innerHTML="";
   TEAM_ROSTER.slice(0,6).forEach((def,i)=>{
     const p=PROFILE[def.id]||PROFILE.steve;
-    const card=document.createElement("article");card.className="nerf-card";card.style.setProperty("--accent",p.color);
-    const c=document.createElement("canvas");c.className="nerf-portrait";c.setAttribute("aria-label",`${def.name} ${p.weapon}`);
-    const name=document.createElement("a");name.className="nerf-name";name.textContent=def.name;name.href=`https://x.com/${X[def.id]}`;name.target="_blank";name.rel="noopener noreferrer";
-    const x=document.createElement("a");x.className="nerf-x";x.textContent=`x.com/${X[def.id]}`;x.href=name.href;x.target="_blank";x.rel="noopener noreferrer";
+    const card=document.createElement("article");
+    card.className="nerf-card";card.style.setProperty("--accent",p.color);
+    card.style.setProperty("--delay",`${i*55}ms`);
+
+    const c=document.createElement("canvas");
+    c.className="nerf-portrait";
+    c.setAttribute("aria-label",`${def.name} ${p.weapon}`);
+
+    const name=document.createElement("div");
+    name.className="nerf-name";name.textContent=def.name;
+
+    const x=document.createElement("a");
+    x.className="nerf-x";x.href=`https://x.com/${X[def.id]}`;
+    x.target="_blank";x.rel="noopener noreferrer";
+    x.setAttribute("aria-label",`Open ${def.name}'s X profile`);
+    x.title=`${def.name} on X`;
+    x.appendChild(xIcon());
+
     const w=document.createElement("div");w.className="nerf-weapon";w.textContent=`◆ ${p.weapon}`;
     const label=document.createElement("div");label.className="nerf-label";label.textContent=`NERF TARGET · ${String(i+1).padStart(2,"0")}`;
     card.append(c,name,x,w,label);grid.appendChild(card);portrait(c,def,i);
@@ -111,19 +131,16 @@ Teams.draw=function(){
     const aim=t.aimAngle||0;
     weapon(ctx,p,t.r,t.age,aim);
     if(t.attackT>0){
-      ctx.globalAlpha=.7;
-      ctx.strokeStyle=p.color;ctx.lineWidth=2;
-      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(aim)*t.r*2.2,Math.sin(aim)*t.r*2.2);ctx.stroke();
-      ctx.globalAlpha=1;
+      ctx.globalAlpha=.7;ctx.strokeStyle=p.color;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(aim)*t.r*2.2,Math.sin(aim)*t.r*2.2);ctx.stroke();ctx.globalAlpha=1;
     }
     ctx.restore();
   }
 };
 
-let raf=0;
 function animateRoster(){
   if(screen.classList.contains("on"))grid.querySelectorAll(".nerf-portrait").forEach((c,i)=>{const d=TEAM_ROSTER[i];if(d)portrait(c,d,i)});
-  raf=requestAnimationFrame(animateRoster);
+  requestAnimationFrame(animateRoster);
 }
 animateRoster();
 window.addEventListener("resize",()=>{if(screen.classList.contains("on"))render()},{passive:true});
