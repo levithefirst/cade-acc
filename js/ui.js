@@ -10,7 +10,7 @@
    NOTE: this file has the same circular-import relationship with
    main.js that every other module does — see main.js's header.
    ============================================================ */
-import { CFG, RANKS, clamp, pick, TAU } from "./config.js";
+import { CFG, RANKS, RUG_TYPES, shadeColor, clamp, pick, TAU } from "./config.js";
 import { ctx, W, H, S, DPR, Theme, Store, Input, lifeIconPos } from "./main.js";
 import { Game } from "./main.js";
 import { Player } from "./player.js";
@@ -239,9 +239,29 @@ export function drawFreeze(){
 export function drawOut(){
   ctx.save();
   ctx.fillStyle="rgba(40,0,0,.5)"; ctx.fillRect(0,0,W,H);
+
+  // diagonal glitch-bar behind the headline — the reference composition's
+  // signature move: a dark angled band with a thin bright top edge, not
+  // just text floating on a flat overlay
+  const barH = H*0.34, barY = H*0.46 - barH/2;
+  ctx.save();
+  ctx.translate(0, barY + barH/2);
+  ctx.transform(1,0, -0.06,1, 0,0); // slight shear for the angled-cut feel
+  ctx.fillStyle = "rgba(10,4,4,.65)";
+  ctx.fillRect(-40*S, -barH/2, W+80*S, barH);
+  ctx.fillStyle = "rgba(255,42,42,.55)";
+  ctx.fillRect(-40*S, -barH/2, W+80*S, 2.5*S);
+  ctx.fillRect(-40*S, barH/2-2.5*S, W+80*S, 2.5*S);
+  ctx.restore();
+
   const t = Game.sceneT/0.9;
   const pop = 1+Math.max(0,(0.2-t))*3.5;
   ctx.textAlign="center"; ctx.textBaseline="middle";
+
+  ctx.font=`700 ${13*S}px ui-monospace, monospace`;
+  ctx.fillStyle="rgba(255,255,255,.5)";
+  ctx.fillText("MISSION", W/2, H*0.46 - 62*S*pop);
+
   ctx.font=`900 ${Math.min(W*0.15, 100*S)*pop}px Arial Black, Impact, sans-serif`;
   ctx.fillStyle="#FF2A2A"; ctx.shadowColor="#FF2A2A"; ctx.shadowBlur=44;
   ctx.fillText("WIPED", W/2, H*0.46);
@@ -500,19 +520,115 @@ export function paintRosterShowcase(){
   const g = c.getContext("2d");
   g.setTransform(DPR,0,0,DPR,0,0);
   g.clearRect(0,0,w,h);
+  // canvas stays transparent on purpose — the .screen panel behind it is
+  // already translucent over the live game canvas (ambient embers, grid,
+  // sunburst), so the composition gets real atmosphere for free instead
+  // of duplicating it here.
 
-  const n = TEAM_ROSTER.length;
-  const slot = w/n;
-  const r = Math.min(slot*0.34, h*0.34);
-  TEAM_ROSTER.forEach((def, i)=>{
-    const cx = slot*i + slot/2, cy = h/2;
+  const cx = w*0.52, cy = h*0.58; // operator sits slightly right of center, lower-mid
+
+  // --- pump trail — a curved path of pumps leading the eye toward the operator ---
+  const pumpPts = [
+    {x:w*0.08, y:h*0.22}, {x:w*0.20, y:h*0.38}, {x:w*0.34, y:h*0.30}
+  ];
+  for(const p of pumpPts){
+    const pr = Math.min(w,h)*0.026;
+    const glow = g.createRadialGradient(p.x,p.y,0,p.x,p.y,pr*2.4);
+    glow.addColorStop(0,"rgba(61,201,107,.45)"); glow.addColorStop(1,"rgba(61,201,107,0)");
+    g.fillStyle = glow; g.beginPath(); g.arc(p.x,p.y,pr*2.4,0,TAU); g.fill();
+    g.fillStyle = "#3DC96B";
+    g.beginPath(); g.arc(p.x,p.y,pr,0,TAU); g.fill();
+  }
+
+  // --- a rug mid-shatter, upper-right, away from the operator's line ---
+  (function drawShatteringRug(){
+    const rx = w*0.85, ry = h*0.22, T = RUG_TYPES.DUMP;
+    const baseW = Math.min(w,h)*0.13, baseH = baseW*T.h/T.w*2.2;
+    g.save();
+    g.translate(rx, ry); g.rotate(-0.35);
+    // three separated fragments instead of one solid piece — "already broken"
+    const frags = [
+      {dx:-baseW*0.32, dy:-baseH*0.1, rot:-0.25, s:0.55},
+      {dx:baseW*0.28,  dy:baseH*0.05, rot:0.4,  s:0.45},
+      {dx:baseW*0.02,  dy:baseH*0.35, rot:0.1,  s:0.4},
+    ];
+    for(const f of frags){
+      g.save();
+      g.translate(f.dx, f.dy); g.rotate(f.rot);
+      const fw=baseW*f.s, fh=baseH*f.s*0.55;
+      const grad = g.createLinearGradient(0,-fh/2,0,fh/2);
+      grad.addColorStop(0, shadeColor(T.col,0.25)); grad.addColorStop(1, shadeColor(T.col,-0.2));
+      g.fillStyle = grad;
+      g.fillRect(-fw/2,-fh/2,fw,fh);
+      g.restore();
+    }
+    // static spark fragments around the break
+    g.fillStyle = "#FC8400";
+    for(let i=0;i<7;i++){
+      const a = (i/7)*TAU, d = baseW*0.55;
+      g.beginPath(); g.arc(Math.cos(a)*d, Math.sin(a)*d, 1.6, 0, TAU); g.fill();
+    }
+    g.restore();
+  })();
+
+  // --- team leaders, staggered depth/scale around the operator, background layer ---
+  const bgSlots = [
+    {id:"steve",    x:0.12, y:0.64, s:0.58},
+    {id:"gnar",     x:0.24, y:0.84, s:0.62},
+    {id:"kosgood",  x:0.36, y:0.68, s:0.66},
+    {id:"scotty",   x:0.70, y:0.68, s:0.66},
+    {id:"rookmate", x:0.86, y:0.56, s:0.56},
+    {id:"poppunk",  x:0.60, y:0.86, s:0.68},
+  ];
+  const baseR = Math.min(w,h)*0.10;
+  for(const slot of bgSlots){
+    const def = TEAM_ROSTER.find(r=>r.id===slot.id); if(!def) continue;
+    g.save();
+    g.globalAlpha = 0.82;
+    g.translate(w*slot.x, h*slot.y);
+    def.draw(g, {r:baseR*slot.s, disabled:false, age:0}, 1);
+    g.restore();
+  }
+
+  // --- operator, front and center, larger than every team leader, dash-lean pose ---
+  (function drawOperatorHero(){
+    const opR = baseR*1.35;
     g.save();
     g.translate(cx, cy);
-    // fake team-instance object — same shape draw() expects at runtime,
-    // just static (age=0, not disabled) since this is a display, not play
-    def.draw(g, {r, disabled:false, age:0}, 1);
+    g.rotate(-0.18); // leaning into the dash
+
+    // motion trail — a streak of fading circles behind the lean direction
+    for(let i=6;i>=1;i--){
+      const t = i/6;
+      g.globalAlpha = (1-t)*0.32;
+      g.fillStyle = "#FC8400";
+      g.beginPath(); g.arc(-i*opR*0.42, i*opR*0.14, opR*t*0.85, 0, TAU); g.fill();
+    }
+    g.globalAlpha = 1;
+
+    // glow
+    const glowR = opR*3.2;
+    const gg = g.createRadialGradient(0,0,0,0,0,glowR);
+    gg.addColorStop(0,"rgba(252,132,0,.45)"); gg.addColorStop(1,"rgba(252,132,0,0)");
+    g.fillStyle = gg; g.beginPath(); g.arc(0,0,glowR,0,TAU); g.fill();
+
+    // body — same silhouette language as the real in-game operator
+    g.scale(opR/13, opR/13);
+    g.fillStyle = "#1A1A1E";
+    g.beginPath();
+    g.arc(0,-1,8,Math.PI,0);
+    g.lineTo(6.5,6.5); g.quadraticCurveTo(0,10.5,-6.5,6.5);
+    g.closePath(); g.fill();
+    g.lineWidth = 1.5; g.strokeStyle = "#FC8400"; g.stroke();
+    g.fillStyle = "#FC8400"; g.fillRect(-5.5,-3.2,11,2.6);
+    g.globalAlpha = 0.85;
+    g.beginPath();
+    g.moveTo(0.8,3); g.lineTo(-1.6,6.4); g.lineTo(-0.3,6.4);
+    g.lineTo(-0.9,9.6); g.lineTo(1.8,5.6); g.lineTo(0.5,5.6);
+    g.closePath(); g.fill();
+    g.globalAlpha = 1;
     g.restore();
-  });
+  })();
 }
 
 export function toggleTheme(){
