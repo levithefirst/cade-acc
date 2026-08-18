@@ -1,160 +1,142 @@
-/* CADE OPS — polish pass
-   Presentation overrides only. Gameplay layout remains owned by style.css. */
+/* CADE OPS — final visual system polish
+   Presentation layer only. Gameplay geometry remains in style.css. */
 :root{
-  --polish-ivory:#f6f2e8;
-  --polish-paper:#fffdf8;
-  --polish-ink:#101010;
-  --polish-muted:#625f57;
-  --polish-line:rgba(16,16,16,.14);
-  --polish-yellow:#ffb000;
-  --polish-orange:#f47b20;
-  --polish-red:#ff3b30;
-  --polish-dark:#111214;
-  --polish-dark2:#191a1e;
+  --cade-cream:#eee7d7;
+  --cade-paper:#f5efe2;
+  --cade-paper-2:#e5dcc9;
+  --cade-ink:#11100e;
+  --cade-muted:#615b50;
+  --cade-yellow:#ffb000;
+  --cade-orange:#ef7418;
+  --cade-red:#e53b2f;
+  --cade-line:rgba(17,16,14,.18);
 }
 
-/* ---------- title ---------- */
+/* LIGHT MODE: cream poster / arcade menu, never white */
+[data-theme="light"] body,
+[data-theme="light"] #stage{background:#d9d0bd;color:var(--cade-ink)}
+[data-theme="light"] .screen{color:var(--cade-ink)}
 [data-theme="light"] #scTitle,
 [data-theme="light"] #scHowToPlay,
 [data-theme="light"] #scLeaderboard{
   background:
-    radial-gradient(circle at 50% 12%,rgba(255,176,0,.15),transparent 30%),
-    linear-gradient(180deg,var(--polish-paper) 0%,var(--polish-ivory) 100%);
-  color:var(--polish-ink);
+    radial-gradient(ellipse 70% 38% at 50% 0%,rgba(255,176,0,.20),transparent 70%),
+    radial-gradient(circle at 92% 42%,rgba(239,116,24,.10),transparent 27%),
+    linear-gradient(135deg,rgba(17,16,14,.035) 0 14%,transparent 14% 86%,rgba(17,16,14,.025) 86%),
+    linear-gradient(180deg,var(--cade-paper) 0%,var(--cade-cream) 72%,#e4dac6 100%);
+  overflow:hidden;
 }
-[data-theme="light"] #scTitle .tagline,
-[data-theme="light"] #scTitle .tagline-sharp,
-[data-theme="light"] #scTitle .eyebrow,
-[data-theme="light"] #scTitle .hs,
-[data-theme="light"] #scTitle .ranksub{color:var(--polish-muted)}
-[data-theme="light"] #scTitle .wordmark .a{color:var(--polish-ink)}
-[data-theme="light"] #scTitle .wordmark .b{
-  background:linear-gradient(180deg,#ffbe24,#e87516);
-  -webkit-background-clip:text;background-clip:text;
+[data-theme="light"] #scTitle::before,
+[data-theme="light"] #scHowToPlay::before,
+[data-theme="light"] #scLeaderboard::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.34;
+  background:
+    linear-gradient(115deg,transparent 0 24%,rgba(17,16,14,.035) 24.2% 24.6%,transparent 24.8% 100%),
+    radial-gradient(circle at 8% 88%,rgba(255,176,0,.12),transparent 22%);
 }
-[data-theme="light"] #scTitle .wordmark .b::before{color:#f39a18;opacity:.16;filter:blur(24px)}
-[data-theme="light"] #scTitle .spotlight-beam{
-  background:linear-gradient(180deg,rgba(255,176,0,.13),rgba(255,176,0,.025) 55%,transparent 86%);
-}
-#scTitle{gap:11px;padding-top:max(28px,env(safe-area-inset-top));}
-#scTitle .brandmark-title{width:min(92vw,520px);height:34px;opacity:.78}
-#scTitle .tagline:first-of-type{font-family:var(--mono);font-size:10px;letter-spacing:.25em;font-weight:800}
-#scTitle .wordmark{font-size:clamp(60px,12.8vw,128px);line-height:.79;margin-top:1px}
-#scTitle .tagline-sharp{font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
-#roster-showcase{
-  width:min(92vw,700px);height:clamp(150px,23vh,210px);margin:5px 0 0;
-  filter:drop-shadow(0 18px 30px rgba(0,0,0,.12));
-}
-#scTitle .btn:not(.ghost){min-width:min(76vw,300px);padding:15px 32px;box-shadow:0 14px 28px rgba(242,137,22,.22)}
-[data-theme="light"] #scTitle .btn.ghost{
-  background:rgba(255,255,255,.72);color:#3f3c36;border-color:var(--polish-line);box-shadow:0 5px 14px rgba(20,16,8,.08)
-}
-#scTitle>.row{gap:7px;flex-wrap:wrap;max-width:760px}
-#scTitle>.row .hs{font-family:var(--mono);font-weight:800;font-size:10px;letter-spacing:.12em}
-#scTitle .theme-toggle{min-width:42px;padding:10px 13px}
-#scTitle #btnLeaderboard{padding-left:17px;padding-right:17px}
-@media(max-width:620px){
-  #scTitle{gap:8px;padding-left:14px;padding-right:14px}
-  #scTitle .wordmark{font-size:clamp(54px,17vw,92px)}
-  #roster-showcase{height:158px}
-  #scTitle>.row{max-width:340px}
-  #scTitle>.row .hs{width:100%;order:-1}
-}
-@media(min-width:900px){
-  #scTitle{padding-top:34px;gap:13px}
-  #roster-showcase{height:220px}
+[data-theme="light"] #scTitle::after{
+  content:"CADE / OPS";position:absolute;right:-20px;top:17%;font:800 clamp(48px,11vw,120px)/1 var(--mono);letter-spacing:-.06em;color:rgba(17,16,14,.035);transform:rotate(-90deg);pointer-events:none;
 }
 
-/* ---------- general light-mode cleanup ---------- */
+/* title composition */
+#scTitle{gap:9px;padding:clamp(18px,4vh,34px) 16px max(18px,env(safe-area-inset-bottom));justify-content:flex-start}
+#scTitle .brandmark-title{width:min(90vw,520px);height:30px;opacity:.78}
+#scTitle .tagline:first-of-type{font:800 9px/1 var(--mono);letter-spacing:.28em;text-transform:uppercase}
+#scTitle .wordmark{font-size:clamp(72px,16vw,136px);line-height:.76;letter-spacing:-.045em;margin:2px 0 0;position:relative;z-index:2}
+[data-theme="light"] #scTitle .wordmark .a{color:var(--cade-ink);text-shadow:3px 3px 0 rgba(17,16,14,.08)}
+[data-theme="light"] #scTitle .wordmark .b{color:var(--cade-orange);background:none;-webkit-text-fill-color:var(--cade-orange);text-shadow:4px 4px 0 rgba(17,16,14,.08)}
+[data-theme="light"] #scTitle .wordmark .b::before{display:none}
+#scTitle .tagline-sharp{font:900 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;position:relative;z-index:2}
+[data-theme="light"] #scTitle .tagline{color:var(--cade-muted)}
+[data-theme="light"] #scTitle .tagline-sharp{color:var(--cade-ink)}
+[data-theme="light"] #scTitle .spotlight-beam{background:linear-gradient(180deg,rgba(255,176,0,.18),rgba(239,116,24,.06) 48%,transparent 82%);opacity:.8}
+
+#roster-showcase{width:min(94vw,720px);height:clamp(168px,25vh,228px);margin:3px auto 0;filter:drop-shadow(0 18px 24px rgba(17,16,14,.16));position:relative;z-index:2}
+[data-theme="light"] #roster-showcase{filter:drop-shadow(0 20px 24px rgba(17,16,14,.20))}
+
+/* CTA hierarchy */
+#scTitle .btn:not(.ghost){min-width:min(78vw,320px);padding:16px 34px;border-radius:11px;font-size:13px;letter-spacing:.08em;box-shadow:5px 6px 0 rgba(17,16,14,.16),0 16px 30px rgba(239,116,24,.18)}
+[data-theme="light"] #scTitle .btn:not(.ghost){background:var(--cade-ink);color:#fff;border-color:var(--cade-ink)}
+[data-theme="light"] #scTitle .btn:not(.ghost):hover{background:#25231f;transform:translateY(-2px)}
+#scTitle>.row{width:min(94vw,760px);gap:7px;flex-wrap:wrap;position:relative;z-index:3}
+#scTitle>.row .hs{font:900 9px/1 var(--mono);letter-spacing:.12em}
+[data-theme="light"] #scTitle>.row .hs{color:var(--cade-muted)}
+[data-theme="light"] #scTitle .btn.ghost{background:rgba(245,239,226,.78);color:var(--cade-ink);border:1px solid var(--cade-line);box-shadow:2px 3px 0 rgba(17,16,14,.08)}
+[data-theme="light"] #scTitle .btn.ghost:hover{background:#fff8ea;border-color:rgba(17,16,14,.3);transform:translateY(-1px)}
+#scTitle .theme-toggle{min-width:44px;padding:10px 12px}
+#scTitle #btnLeaderboard{padding-left:16px;padding-right:16px}
+
+/* mobile is composed, not scaled desktop */
+@media(max-width:620px){
+  #scTitle{gap:7px;padding-left:12px;padding-right:12px;justify-content:flex-start}
+  #scTitle .brandmark-title{height:25px}
+  #scTitle .wordmark{font-size:clamp(68px,20vw,92px);margin-top:4px}
+  #scTitle .tagline-sharp{font-size:10px;letter-spacing:.14em}
+  #roster-showcase{height:170px;margin-top:8px}
+  #scTitle .btn:not(.ghost){padding:15px 28px}
+  #scTitle>.row{max-width:360px;margin-top:2px}
+  #scTitle>.row .hs{width:100%;order:-1;margin-bottom:1px}
+  #scTitle>.row .btn{font-size:9px;min-height:38px}
+  #scTitle #btnLeaderboard{width:100%}
+}
+@media(min-width:621px) and (max-width:899px){#scTitle{padding-top:28px}#roster-showcase{height:205px}}
+@media(min-width:900px){#scTitle{gap:11px;padding-top:30px}#roster-showcase{height:220px}}
+
+/* common light surfaces */
 [data-theme="light"] .screen .rules,
-[data-theme="light"] .screen .stat,
 [data-theme="light"] .screen .lb-list,
 [data-theme="light"] .screen .tweetbox,
-[data-theme="light"] .screen .name-input{
-  background:rgba(255,255,255,.78);
-  color:var(--polish-ink);
-  border-color:var(--polish-line);
-  box-shadow:0 8px 24px rgba(35,28,14,.08),inset 0 1px 0 rgba(255,255,255,.8);
+[data-theme="light"] .screen .name-input,
+[data-theme="light"] .screen .stat{
+  background:rgba(250,245,235,.84);color:var(--cade-ink);border-color:var(--cade-line);box-shadow:4px 5px 0 rgba(17,16,14,.06),0 12px 28px rgba(17,16,14,.06);backdrop-filter:blur(8px)
 }
-[data-theme="light"] .screen .rank,
-[data-theme="light"] .screen .rules,
-[data-theme="light"] .screen .stat .v,
-[data-theme="light"] .screen .lb-list{color:var(--polish-ink)}
+[data-theme="light"] .screen .rank{color:var(--cade-ink)}
 [data-theme="light"] .screen .ranksub,
 [data-theme="light"] .screen .scorelabel,
-[data-theme="light"] .screen .stat .k{color:var(--polish-muted)}
+[data-theme="light"] .screen .stat .k{color:var(--cade-muted)}
 
-/* ---------- results: a real end-of-run surface ---------- */
-#scEnd{
-  justify-content:flex-start;
-  gap:10px;
-  padding:clamp(20px,4vh,42px) 18px max(24px,env(safe-area-inset-bottom));
-  background:
-    radial-gradient(circle at 50% 8%,rgba(255,176,0,.12),transparent 28%),
-    linear-gradient(180deg,#141518 0%,#0d0e10 100%);
-  color:#fff;
-}
-#scEnd::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:4px;
-  background:linear-gradient(90deg,#ff3b30 0%,#ffb000 48%,#f47b20 100%);
-  box-shadow:0 0 22px rgba(255,176,0,.25);
-}
-#scEnd .brandmark-end{height:30px;width:min(88vw,460px);opacity:.72}
-#scEnd .eyebrow{color:#ffb000;opacity:1;font-size:9px}
-#scEnd .verdict{margin-top:2px;color:#ff3b30;text-shadow:0 0 22px rgba(255,59,48,.24);font-size:clamp(18px,4vw,25px)}
-#scEnd .verdict::before{border-color:rgba(255,59,48,.35);background:rgba(255,59,48,.045)}
-#scEnd .scorelabel{color:rgba(255,255,255,.48);font-family:var(--mono);font-weight:800;letter-spacing:.28em}
-#scEnd .bigscore{
-  font-size:clamp(74px,18vw,154px);
-  background:linear-gradient(180deg,#fff7d6 0%,#ffb000 68%,#f47b20 100%);
-  -webkit-background-clip:text;background-clip:text;
-}
-#scEnd .bigscore::before{color:#ff9f00;opacity:.22}
-#scEnd .rank{font-size:clamp(20px,4.6vw,32px);color:#fff}
-#scEnd .ranksub{color:rgba(255,255,255,.6)}
-#scEnd .stats{gap:7px;max-width:560px}
-#scEnd .stat{
-  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);
-  border-top-color:rgba(255,255,255,.17);box-shadow:0 8px 20px rgba(0,0,0,.22);border-radius:14px;
-}
-#scEnd .stat .k{color:rgba(255,255,255,.45)}
+/* how-to and leaderboard get the same editorial treatment */
+[data-theme="light"] #scHowToPlay{background:linear-gradient(145deg,#f3ecdd,#e6ddca)}
+[data-theme="light"] #scHowToPlay .rank{font-size:clamp(30px,6vw,46px)}
+[data-theme="light"] #scHowToPlay .rules{max-width:650px;line-height:1.75;border-left:4px solid var(--cade-orange);border-radius:4px;padding:18px 20px}
+[data-theme="light"] #scLeaderboard{background:linear-gradient(145deg,#f4ede0,#e2d8c5)}
+
+/* RESULTS: deliberate arcade poster, separate from landing theme */
+#scEnd{justify-content:flex-start;gap:8px;padding:clamp(18px,4vh,38px) 16px max(24px,env(safe-area-inset-bottom));background:#111214;color:#fff;overflow-y:auto}
+#scEnd::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% -10%,rgba(255,176,0,.17),transparent 38%),linear-gradient(120deg,transparent 0 72%,rgba(239,116,24,.08) 72% 76%,transparent 76%)}
+#scEnd::after{content:"RUN COMPLETE";position:absolute;right:-18px;bottom:15%;font:900 clamp(44px,9vw,100px)/1 var(--mono);letter-spacing:-.08em;color:rgba(255,255,255,.025);transform:rotate(-90deg);pointer-events:none}
+#scEnd .brandmark-end{height:24px;width:min(88vw,460px);opacity:.65}
+#scEnd .eyebrow{color:var(--cade-yellow);font-size:9px}
+#scEnd .verdict{color:#ff493d;font-size:clamp(20px,4.5vw,28px);text-shadow:none}
+#scEnd .scorelabel{color:rgba(255,255,255,.45);font:900 9px/1 var(--mono);letter-spacing:.28em;text-transform:uppercase}
+#scEnd .bigscore{font-size:clamp(78px,19vw,158px);line-height:.82;background:linear-gradient(180deg,#fff7d6,#ffb000 62%,#ef7418);-webkit-background-clip:text;background-clip:text}
+#scEnd .bigscore::before{color:#ff9f00;opacity:.14}
+#scEnd .rank{font-size:clamp(21px,5vw,34px);color:#fff}
+#scEnd .ranksub{color:rgba(255,255,255,.57)}
+#scEnd .stats{width:min(100%,600px);gap:7px}
+#scEnd .stat{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);border-radius:10px;box-shadow:none}
+#scEnd .stat .k{color:rgba(255,255,255,.42)}
 #scEnd .stat .v{color:#fff}
-#scEnd .hs{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.55)}
+#scEnd .hs{font:900 9px/1 var(--mono);letter-spacing:.12em;color:rgba(255,255,255,.50)}
 #scEnd .name-group-results{width:min(100%,430px)}
-#scEnd .name-input{
-  width:100%;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.14);
-  border-radius:12px;padding:12px 14px;font-family:var(--mono);font-weight:700;outline:none;
-}
-#scEnd .name-input:focus{border-color:#ffb000;box-shadow:0 0 0 3px rgba(255,176,0,.12)}
+#scEnd .name-input{width:100%;background:rgba(255,255,255,.055);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:12px 14px;font-family:var(--mono);font-weight:800;outline:none}
+#scEnd .name-input:focus{border-color:var(--cade-yellow);box-shadow:0 0 0 3px rgba(255,176,0,.12)}
 #scEnd .name-hint{color:rgba(255,255,255,.42);font-size:10px;margin-top:4px}
-#scEnd .tweetbox{max-width:560px;width:100%;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72)}
-#scEnd .btn:not(.ghost){box-shadow:0 12px 26px rgba(255,168,0,.16)}
-#scEnd .btn.x-share{background:#fff;color:#111;border-color:#fff;box-shadow:0 10px 22px rgba(0,0,0,.2)}
-#scEnd .btn.ghost{background:rgba(255,255,255,.055);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.10)}
-#scEnd .btn.ghost:hover{background:rgba(255,255,255,.1);color:#fff}
-#scEnd>.row{gap:8px;flex-wrap:wrap}
-@media(max-height:760px){#scEnd{gap:6px;padding-top:14px}#scEnd .brandmark-end{height:22px}#scEnd .bigscore{font-size:clamp(62px,16vw,116px)}}
+#scEnd .tweetbox{max-width:600px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72)}
+#scEnd .btn:not(.ghost){box-shadow:0 12px 24px rgba(255,168,0,.15)}
+#scEnd .btn.x-share{background:#fff;color:#111;border-color:#fff}
+#scEnd .btn.ghost{background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);border-color:rgba(255,255,255,.11)}
+#scEnd>.row{gap:7px;flex-wrap:wrap}
+@media(max-height:760px){#scEnd{gap:5px;padding-top:12px}#scEnd .brandmark-end{height:19px}#scEnd .bigscore{font-size:clamp(62px,16vw,116px)}}
 
-[data-theme="light"] #scEnd{background:linear-gradient(180deg,#151619 0%,#0c0d0f 100%);color:#fff}
-
-/* ---------- how-to-play ---------- */
-[data-theme="light"] #scHowToPlay{background:linear-gradient(180deg,#fffdf8,#f2ede1)}
-#scHowToPlay .rules{max-width:620px;line-height:1.8}
-#scHowToPlay .rank{font-size:clamp(24px,5vw,38px)}
-
-/* ---------- nerf roster ---------- */
-#scNerfs{background:linear-gradient(180deg,#101114,#0b0c0e)}
-#scNerfs .nerfs-heading{font-size:clamp(25px,5.6vw,40px);letter-spacing:.02em}
-#scNerfs .nerfs-subtitle{text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:rgba(255,255,255,.48)}
+/* roster */
+#scNerfs{background:#101114}
+#scNerfs .nerfs-heading{font-size:clamp(28px,6vw,44px)}
+#scNerfs .nerfs-subtitle{text-transform:uppercase;letter-spacing:.15em;font-size:9px;color:rgba(255,255,255,.48)}
 #scNerfs .nerfs-grid{gap:12px}
-#scNerfs .nerf-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));border-color:rgba(255,255,255,.10);box-shadow:0 18px 38px rgba(0,0,0,.30)}
-#scNerfs .nerf-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 55%,rgba(255,255,255,.12))}
-#scNerfs .nerf-portrait{background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--accent) 18%,transparent),rgba(0,0,0,.20) 72%)}
+#scNerfs .nerf-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));border-color:rgba(255,255,255,.10);box-shadow:0 16px 32px rgba(0,0,0,.30);border-radius:14px}
+#scNerfs .nerf-card:hover{transform:translateY(-3px)}
 
-/* avoid the original CSS shimmer typo producing invalid animation timing */
+/* motion discipline */
 .btn::after{animation-duration:5s}
-
-@media(prefers-reduced-motion:reduce){
-  .btn::after{animation:none}
-  #scTitle .spotlight-beam{opacity:.5}
-}
+@media(prefers-reduced-motion:reduce){.btn::after{animation:none}#scTitle .spotlight-beam{opacity:.45}}
