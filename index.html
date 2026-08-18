@@ -1,113 +1,634 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+>
+
 <title>CADE OPS — Dash. Nerf. Dominate.</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Bungee&display=swap"
+  rel="stylesheet"
+>
+
 <link rel="stylesheet" href="css/style.css">
 </head>
+
+
 <body>
-<div id="stage"><canvas id="cv"></canvas></div>
-<button id="dashBtn" aria-label="Ape Dash">
-  <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+
+<div id="stage">
+  <canvas id="cv"></canvas>
+</div>
+
+
+<!-- ============================================================
+     APE DASH BUTTON
+     ============================================================ -->
+
+<button
+  id="dashBtn"
+  aria-label="Ape Dash"
+>
+  <svg
+    viewBox="0 0 24 24"
+    class="icon-svg"
+    aria-hidden="true"
+  >
+    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+  </svg>
 </button>
 
-<!-- ============ TITLE ============ -->
-<div class="screen on" id="scTitle">
-  <canvas class="brandmark brandmark-title" id="markTitle"></canvas>
-  <div class="tagline">CadeMarket presents</div>
-  <div class="spotlight-beam" aria-hidden="true"></div>
-  <h1 class="wordmark"><span class="a">CADE</span><br><span class="b" data-text="OPS">OPS</span></h1>
-  <div class="tagline tagline-sharp">Dash. Nerf. Dominate.</div>
 
-  <canvas id="roster-showcase" aria-label="The six Cade Ops characters"></canvas>
 
-  <button class="btn" id="btnStart">Let's Cade</button>
-  <div class="row">
-    <div class="hs" id="tHigh"></div>
-    <button class="btn ghost sound-toggle icon-label" id="btnSound">
-      <svg viewBox="0 0 24 24" class="icon-svg" id="soundIconSvg" aria-hidden="true">
-        <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/>
-      </svg>
-      <span id="soundLabel">Sound On</span>
-    </button>
-    <button class="btn ghost theme-toggle" id="btnTheme" aria-label="Toggle theme">
-      <svg viewBox="0 0 24 24" class="icon-svg" id="themeIconTitle" aria-hidden="true">
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-      </svg>
-    </button>
-    <button class="btn ghost" id="btnLeaderboard">🏆 Leaderboard</button>
+<!-- ============================================================
+     TITLE
+     ============================================================ -->
+
+<div
+  class="screen on"
+  id="scTitle"
+>
+
+  <canvas
+    class="brandmark brandmark-title"
+    id="markTitle"
+  ></canvas>
+
+
+  <div class="tagline">
+    CadeMarket presents
   </div>
+
+
+  <div
+    class="spotlight-beam"
+    aria-hidden="true"
+  ></div>
+
+
+  <h1 class="wordmark">
+
+    <span class="a">
+      CADE
+    </span>
+
+    <br>
+
+    <span
+      class="b"
+      data-text="OPS"
+    >
+      OPS
+    </span>
+
+  </h1>
+
+
+  <div class="tagline tagline-sharp">
+    Dash. Nerf. Dominate.
+  </div>
+
+
+  <canvas
+    id="roster-showcase"
+    aria-label="The six Cade Ops characters"
+  ></canvas>
+
+
+  <button
+    class="btn"
+    id="btnStart"
+  >
+    Let's Cade
+  </button>
+
+
+  <div class="row">
+
+    <div
+      class="hs"
+      id="tHigh"
+    ></div>
+
+
+    <button
+      class="btn ghost sound-toggle icon-label"
+      id="btnSound"
+    >
+
+      <svg
+        viewBox="0 0 24 24"
+        class="icon-svg"
+        id="soundIconSvg"
+        aria-hidden="true"
+      >
+
+        <path
+          d="M4 9v6h4l5 4V5L8 9H4z"
+        />
+
+        <path
+          d="M16 9a4 4 0 0 1 0 6"
+        />
+
+      </svg>
+
+      <span id="soundLabel">
+        Sound On
+      </span>
+
+    </button>
+
+
+    <button
+      class="btn ghost theme-toggle"
+      id="btnTheme"
+      aria-label="Toggle theme"
+    >
+
+      <svg
+        viewBox="0 0 24 24"
+        class="icon-svg"
+        id="themeIconTitle"
+        aria-hidden="true"
+      >
+
+        <path
+          d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"
+        />
+
+      </svg>
+
+    </button>
+
+
+    <button
+      class="btn ghost"
+      id="btnLeaderboard"
+    >
+      🏆 Leaderboard
+    </button>
+
+  </div>
+
 </div>
 
-<!-- ============ HOW TO PLAY ============ -->
-<div class="screen" id="scHowToPlay">
-  <div class="eyebrow">Cade Ops</div>
-  <div class="rank">HOW TO PLAY</div>
+
+
+<!-- ============================================================
+     HOW TO PLAY
+     ============================================================ -->
+
+<div
+  class="screen"
+  id="scHowToPlay"
+>
+
+  <div class="eyebrow">
+    Cade Ops
+  </div>
+
+
+  <div class="rank">
+    HOW TO PLAY
+  </div>
+
+
   <p class="rules">
-    Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br>
-    <span class="k">SPACE</span> / <span class="k">⚡ button</span> = <b>APE DASH</b>. Dash through a team leader to <b>nerf</b> them.<br>
-    You've got <b>3 lives</b>. Touching a team or a rug without dashing <span class="c-danger">costs a life</span>. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>
-    Green pumps pay out multiplied — <span class="c-gold">3 in a row fills your energy bar</span> for a speed boost.<br>
-    <b>Nerf as many teams as you can before the buzzer.</b>
+
+    Move with
+
+    <span class="k">
+      mouse
+    </span>
+
+    <span class="k">
+      WASD
+    </span>
+
+    <span class="k">
+      arrows
+    </span>
+
+    or
+
+    <span class="k">
+      drag
+    </span>.
+
+    <br>
+
+
+    <span class="k">
+      SPACE
+    </span>
+
+    /
+
+    <span class="k">
+      ⚡ button
+    </span>
+
+    =
+
+    <b>
+      APE DASH
+    </b>.
+
+    Dash through a team leader to
+
+    <b>
+      nerf
+    </b>
+
+    them.
+
+    <br>
+
+
+    You've got
+
+    <b>
+      3 lives
+    </b>.
+
+    Touching a team or a rug without dashing
+
+    <span class="c-danger">
+      costs a life
+    </span>.
+
+    Grazing builds your
+
+    <b>
+      DEGEN MULTIPLIER
+    </b>.
+
+    <br>
+
+
+    Green pumps pay out multiplied —
+
+    <span class="c-gold">
+      3 in a row fills your energy bar
+    </span>
+
+    for a speed boost.
+
+    <br>
+
+
+    <b>
+      Nerf as many teams as you can before the buzzer.
+    </b>
+
   </p>
-  <div class="row">
-    <button class="btn" id="btnHowToPlayBack">Let's Cade</button>
-  </div>
-</div>
 
-<!-- ============ LEADERBOARD ============ -->
-<div class="screen" id="scLeaderboard">
-  <canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas>
-  <div class="eyebrow">Cade Ops</div>
-  <div class="rank">GLOBAL LEADERBOARD</div>
-  <div class="ranksub" id="lbStatus">Loading...</div>
-  <div class="lb-list glass" id="lbList"></div>
-  <div class="row">
-    <button class="btn" id="btnLbBack">Back</button>
-  </div>
-</div>
 
-<!-- ============ RESULTS ============ -->
-<div class="screen" id="scEnd">
-  <canvas class="brandmark brandmark-end" id="markEnd"></canvas>
-  <div class="eyebrow">Cade Ops</div>
-  <div class="verdict" id="eVerdict">WIPED</div>
-  <div>
-    <div class="scorelabel">Final bag</div>
-    <div class="bigscore" id="eScore" data-text="0">0</div>
-  </div>
-  <div class="rank" id="eRank">GHOSTED</div>
-  <div class="ranksub" id="eRoast"></div>
-  <div class="stats stats-primary" id="eStatsPrimary"></div>
-  <div class="stats stats-secondary" id="eStatsSecondary"></div>
-  <div class="hs" id="eHigh"></div>
-  <div class="hs" id="eGlobalRank"></div>
-  <div class="name-group name-group-results">
-    <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
-    <div class="name-hint" id="nameHint"></div>
-  </div>
-  <div class="tweetbox" id="eTweet"></div>
   <div class="row">
-    <button class="btn" id="btnAgain">Run It Back</button>
-  </div>
-  <div class="row">
-    <button class="btn x-share" id="btnShareX">𝕏 Share on X</button>
-  </div>
-  <div class="row">
-    <button class="btn ghost wide" id="btnCopy">Copy Tweet</button>
-    <button class="btn ghost wide" id="btnCard">Save Image</button>
-    <button class="btn ghost theme-toggle" id="btnThemeEnd" aria-label="Toggle theme">
-      <svg viewBox="0 0 24 24" class="icon-svg" id="themeIconEnd" aria-hidden="true">
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-      </svg>
+
+    <button
+      class="btn"
+      id="btnHowToPlayBack"
+    >
+      Meet The 6 Nerfs
     </button>
+
   </div>
+
 </div>
 
-<script type="module" src="js/main.js"></script>
+
+
+<!-- ============================================================
+     THE 6 NERFS
+     ============================================================ -->
+
+<div
+  class="screen nerfs-screen"
+  id="scNerfs"
+>
+
+  <div class="eyebrow">
+    Cade Ops
+  </div>
+
+
+  <div class="rank nerfs-heading">
+    THE 6 NERFS
+  </div>
+
+
+  <div class="ranksub nerfs-subtitle">
+    They are hunting you too.
+  </div>
+
+
+  <div
+    class="nerfs-grid"
+    id="nerfsGrid"
+  ></div>
+
+
+  <div class="row nerfs-actions">
+
+    <button
+      class="btn ghost"
+      id="btnNerfsBack"
+    >
+      Back
+    </button>
+
+
+    <button
+      class="btn"
+      id="btnNerfsStart"
+    >
+      Let's Cade
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     LEADERBOARD
+     ============================================================ -->
+
+<div
+  class="screen"
+  id="scLeaderboard"
+>
+
+  <canvas
+    class="brandmark brandmark-end"
+    id="markLeaderboard"
+  ></canvas>
+
+
+  <div class="eyebrow">
+    Cade Ops
+  </div>
+
+
+  <div class="rank">
+    GLOBAL LEADERBOARD
+  </div>
+
+
+  <div
+    class="ranksub"
+    id="lbStatus"
+  >
+    Loading...
+  </div>
+
+
+  <div
+    class="lb-list glass"
+    id="lbList"
+  ></div>
+
+
+  <div class="row">
+
+    <button
+      class="btn"
+      id="btnLbBack"
+    >
+      Back
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     RESULTS
+     ============================================================ -->
+
+<div
+  class="screen"
+  id="scEnd"
+>
+
+  <canvas
+    class="brandmark brandmark-end"
+    id="markEnd"
+  ></canvas>
+
+
+  <div class="eyebrow">
+    Cade Ops
+  </div>
+
+
+  <div
+    class="verdict"
+    id="eVerdict"
+  >
+    WIPED
+  </div>
+
+
+  <div>
+
+    <div class="scorelabel">
+      Final bag
+    </div>
+
+    <div
+      class="bigscore"
+      id="eScore"
+      data-text="0"
+    >
+      0
+    </div>
+
+  </div>
+
+
+  <div
+    class="rank"
+    id="eRank"
+  >
+    GHOSTED
+  </div>
+
+
+  <div
+    class="ranksub"
+    id="eRoast"
+  ></div>
+
+
+  <div
+    class="stats stats-primary"
+    id="eStatsPrimary"
+  ></div>
+
+
+  <div
+    class="stats stats-secondary"
+    id="eStatsSecondary"
+  ></div>
+
+
+  <div
+    class="hs"
+    id="eHigh"
+  ></div>
+
+
+  <div
+    class="hs"
+    id="eGlobalRank"
+  ></div>
+
+
+
+  <!-- PLAYER NAME -->
+
+  <div
+    class="name-group name-group-results"
+  >
+
+    <input
+      class="name-input"
+      id="playerNameInput"
+      minlength="10"
+      maxlength="16"
+      placeholder="Your name"
+      aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice"
+    >
+
+    <div
+      class="name-hint"
+      id="nameHint"
+    ></div>
+
+  </div>
+
+
+
+  <!-- TWEET -->
+
+  <div
+    class="tweetbox"
+    id="eTweet"
+  ></div>
+
+
+
+  <!-- AGAIN -->
+
+  <div class="row">
+
+    <button
+      class="btn"
+      id="btnAgain"
+    >
+      Run It Back
+    </button>
+
+  </div>
+
+
+
+  <!-- SHARE -->
+
+  <div class="row">
+
+    <button
+      class="btn x-share"
+      id="btnShareX"
+    >
+      𝕏 Share on X
+    </button>
+
+  </div>
+
+
+
+  <!-- SECONDARY ACTIONS -->
+
+  <div class="row">
+
+    <button
+      class="btn ghost wide"
+      id="btnCopy"
+    >
+      Copy Tweet
+    </button>
+
+
+    <button
+      class="btn ghost wide"
+      id="btnCard"
+    >
+      Save Image
+    </button>
+
+
+    <button
+      class="btn ghost theme-toggle"
+      id="btnThemeEnd"
+      aria-label="Toggle theme"
+    >
+
+      <svg
+        viewBox="0 0 24 24"
+        class="icon-svg"
+        id="themeIconEnd"
+        aria-hidden="true"
+      >
+
+        <path
+          d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"
+        />
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     GAME
+     ============================================================ -->
+
+<script
+  type="module"
+  src="js/main.js"
+></script>
+
+
+<!-- ============================================================
+     THE 6 NERFS / HUNTER AI
+     ============================================================ -->
+
+<script
+  type="module"
+  src="js/nerfs-page.js"
+></script>
+
 </body>
+
 </html>
