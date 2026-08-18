@@ -8,12 +8,13 @@
    — it never replaces the calibrated numbers, so CFG.PLAYER_MAXV/ACCEL
    stay meaningful even when boosted.
    ============================================================ */
-import { CFG, clamp, TAU } from "./config.js";
+import { CFG, clamp, rnd, TAU } from "./config.js";
 import { ctx, W, H, S, Input } from "./main.js";
 import { Game } from "./main.js";
 import { Theme } from "./main.js";
 import { FX, Parts } from "./particles.js";
 import { SFX, Haptics } from "./audio.js";
+import { Telemetry } from "./telemetry.js";
 
 export const Player = {
   x:0,y:0,prevX:0,prevY:0,vx:0,vy:0,r:CFG.PLAYER_R,
@@ -36,6 +37,7 @@ export const Player = {
     this.dashAng = Math.atan2(ay,ax);
     this.dash = CFG.DASH_TIME; this.dashCd = CFG.DASH_COOLDOWN;
     Game.stats.dashes++;
+    Telemetry.dashAttempt();
     FX.kick(7); FX.chroma = 1;
     SFX.dash(); Haptics.dash();
     Parts.spawn(this.x,this.y,18,{c:"#FC8400",angle:this.dashAng+Math.PI,spread:1.1,smin:180,smax:460,spark:true});

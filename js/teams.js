@@ -37,6 +37,7 @@ import { Player } from "./player.js";
 import { Pumps } from "./pumps.js";
 import { FX, Parts, Rings, Floaters } from "./particles.js";
 import { SFX, Haptics } from "./audio.js";
+import { Telemetry } from "./telemetry.js";
 
 /* ============================================================
    ROSTER — the 6 team leaders. This IS the full cast; Teams never
@@ -261,6 +262,7 @@ export const Teams = {
     t.roamTimer = rnd(1,2.5);
     t.speed = rnd(CFG.TEAM_SPEED[0], CFG.TEAM_SPEED[1]);
     t.grazed = false; t.grazeCooldown = 0;
+    t.spawnedAtElapsed = CFG.RUN_SECONDS - Game.time; // for the team-lifetime telemetry metric
     return t;
   },
 
@@ -298,6 +300,7 @@ export const Teams = {
       // pick a behavior state
       let targetX=null, targetY=null;
       if(aggroOn && Math.hypot(Player.x-t.x, Player.y-t.y) < 260*S){
+        if(t.state !== "chase") Telemetry.chaseActivation();
         t.state = "chase";
         targetX = Player.x; targetY = Player.y;
       } else {
@@ -338,6 +341,10 @@ export const Teams = {
     Game.multi = Math.min(CFG.MULTI_MAX, Game.multi + CFG.TEAM_NERF_MULTI_BONUS);
     Game.bestMulti = Math.max(Game.bestMulti, Game.multi);
     Game.hitstop = Math.max(Game.hitstop, CFG.HITSTOP_DASHKILL);
+
+    const elapsed = CFG.RUN_SECONDS - Game.time;
+    const lifetime = elapsed - (t.spawnedAtElapsed||elapsed);
+    Telemetry.nerfEvent(t.roster.id, Game.multi, elapsed, lifetime);
 
     const c = t.roster.accent;
     FX.kick(13); FX.invertHit(0.4); FX.glitchHit(0.55); FX.vignette(0.5, c);

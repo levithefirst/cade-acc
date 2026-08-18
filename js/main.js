@@ -27,17 +27,20 @@
    before initialization" error.
    ============================================================ */
 
-import { CFG, rnd, rint, lerp, clamp, TAU } from "./config.js";
+import { CFG, rnd, rint, lerp, clamp, pick, TAU } from "./config.js";
 import { Player } from "./player.js";
 import { Rugs } from "./rugs.js";
 import { Pumps } from "./pumps.js";
 import { Teams } from "./teams.js";
+import { Telemetry } from "./telemetry.js";
 import { FX, Parts, Rings, Floaters, Ambient } from "./particles.js";
 import { SFX, Music, Haptics, AudioCore } from "./audio.js";
 import {
   drawTimer, drawHUD, drawFreeze, drawOut, drawFinalRug,
-  dashBtn, paintDomMarks, startRun
+  dashBtn, paintDomMarks, startRun, showResults,
+  paintTitleHighScore, initSound, initTheme
 } from "./ui.js";
+import { initPlayerName } from "./leaderboard.js";
 
 /* ============================================================
    STORAGE — localStorage w/ safe in-memory fallback.
@@ -220,6 +223,7 @@ export const Game = {
     Rugs.clear(); Pumps.clear(); Teams.clear(); Parts.clear(); Floaters.clear(); Rings.clear(); FX.reset();
     Player.reset();
     Teams.spawnWave(4); // arena should never open empty
+    Telemetry.startRun();
   },
 
   addScore(n, x, y, label){
@@ -340,6 +344,7 @@ export const Game = {
       Teams.spawn();
       this.teamSpawnTimer = rnd(0.6, 1.4);
     }
+    Telemetry.sampleActiveTeams(Teams.activeCount(), dt);
   },
 
   spawnOne(){
@@ -366,7 +371,7 @@ export const Game = {
       if(d < touch){
         if(Player.dash>0){ Rugs.destroy(r, true); }
         else if(Player.iframes>0){ /* pass through */ }
-        else { this.onHit(); Rugs.destroy(r, false); }
+        else { Telemetry.rugContact(); Telemetry.breakChain(); this.onHit(); Rugs.destroy(r, false); }
         continue;
       }
       if(!r.grazed && d < touch + CFG.NEAR_BAND*S){
@@ -394,7 +399,7 @@ export const Game = {
       const d = Math.hypot(Player.x-t.x, Player.y-t.y);
       if(d < touch){
         if(Player.iframes>0){ /* pass through */ }
-        else { this.onHit(); }
+        else { Telemetry.teamContact(); Telemetry.breakChain(); this.onHit(); }
         continue;
       }
       if(!t.grazed && d < touch + CFG.NEAR_BAND*S){
@@ -493,6 +498,7 @@ export const Game = {
       if(this.meltdown && Player.y > this.pressureY && Player.iframes<=0 && Player.dash<=0){
         if(this.pressureHitCd<=0){
           this.pressureHitCd = CFG.PRESSURE_HIT_CD;
+          Telemetry.breakChain();
           this.onHit();
           Floaters.add(Player.x, Player.y-50*S, "LIQUIDATED", "#FF2A2A", 18);
         }
@@ -577,6 +583,7 @@ export const Game = {
     this.scene = "results";
     Music.setIntensity("calm");
     Music.duck(0.22);
+    Telemetry.endRun(Math.round(this.score), this.survivedFinal);
     showResults();
   }
 };
@@ -745,4 +752,25 @@ function frame(now){
   render();
   requestAnimationFrame(frame);
 }
+
+/* ============================================================
+   BOOT SEQUENCE
+   Everything below reads Store/Theme/W/H/DPR — bindings that are only
+   safe to touch once every module has finished loading AND this file's
+   own body (Store/Theme/canvas setup, resize()) has actually executed.
+   This is NOT optional ordering — an earlier version of this file had
+   these as eager top-level calls scattered across ui.js/leaderboard.js/
+   particles.js, and every one of them threw "Cannot access before
+   initialization" the first time the module graph was actually
+   executed (caught by real runtime testing, not by syntax checking —
+   see the project notes). If you add new startup logic that reads a
+   circularly-imported value, put it here, not at another file's top
+   level.
+   ============================================================ */
+Ambient.init();
+paintTitleHighScore();
+initTheme();   // also paints the brand marks via Theme.apply() -> paintDomMarks()
+initSound();
+initPlayerName();
+
 requestAnimationFrame(frame);
