@@ -438,8 +438,8 @@ export function showResults(){
 
   const rk = rankFor(st.nerfs||0);
   const v = document.getElementById("eVerdict");
-  if(Game.survivedFinal){ v.textContent="ARENA CLEARED"; v.className="verdict win"; }
-  else { v.textContent="WIPED AT THE BUZZER"; v.className="verdict lose"; }
+  if(Game.survivedFinal){ v.innerHTML="ARENA CLEARED"; v.className="verdict win"; }
+  else { v.innerHTML='<span class="verdict-mission">MISSION</span>WIPED AT THE BUZZER'; v.className="verdict lose"; }
 
   document.getElementById("eScore").textContent = "0";
   animateScoreReveal(score);
@@ -734,6 +734,10 @@ function buildShareCard(){
   g.fillStyle=tc.cade; g.font="700 26px ui-monospace, monospace";
   g.fillText("CADE OPS", 70, 80);
 
+  if(!Game.survivedFinal){
+    g.fillStyle="rgba(255,255,255,.5)"; g.font="700 18px ui-monospace, monospace";
+    g.fillText("MISSION", 71, 132);
+  }
   g.fillStyle = Game.survivedFinal ? "#3DC96B" : "#FF2A2A";
   g.font="900 52px Arial Black, Impact, sans-serif";
   g.fillText(Game.survivedFinal ? "ARENA CLEARED" : "WIPED AT THE BUZZER", 70, 180);
