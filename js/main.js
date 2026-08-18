@@ -219,6 +219,11 @@ export const Game = {
     this.finalRugOutcome=null; this.survivalTime=0; this.runStartedAt=performance.now();
     this.lives=CFG.LIVES; this.diedEarly=false; this.deathTime=0; this.lastTickSec=999; this.lastTier=-1;
     this.energy=0; this.pumpStreak=0; this.boosted=false; this.teamSpawnTimer=0;
+    // per-run archetype bias — each run leans toward one hazard type more
+    // than usual (never WHALE, which stays rare/conditional on purpose).
+    // Not announced; the player reads it through the first ~10s of play,
+    // same as any other arcade game's procedural seed would present.
+    this.runBias = pick(["DUMP","WICK","LIQUIDATION","FAKEOUT"]);
     this.stats={grazes:0,pumps:0,hits:0,dashes:0,shredded:0,spawned:0,bigPumps:0,nerfs:0,firstHitAt:null};
     Rugs.clear(); Pumps.clear(); Teams.clear(); Parts.clear(); Floaters.clear(); Rings.clear(); FX.reset();
     Player.reset();
@@ -285,7 +290,11 @@ export const Game = {
       this.survivedFinal = false;
       this.deathTime = CFG.RUN_SECONDS - this.time;
       this.scene = "out"; this.sceneT = 0;
-      FX.kick(40); FX.invertHit(1); FX.flashHit(1); this.hitstop = CFG.HITSTOP_FINAL;
+      FX.kick(40); FX.invertHit(1); FX.flashHit(1); FX.glitchHit(2.2); this.hitstop = CFG.HITSTOP_FINAL;
+      // ember burst — the "mission failed" moment gets real drifting sparks,
+      // not just a screen flash, matching the reference's particle language
+      Parts.spawn(Player.x, Player.y, 40, {c:"#FF2A2A", smin:60, smax:340, lmin:.5, lmax:1.1, rmin:1.5, rmax:3.5, spark:true, g:40});
+      Parts.spawn(Player.x, Player.y, 20, {c:"#FF8A3D", smin:30, smax:180, lmin:.6, lmax:1.3, rmin:1, rmax:2.2, g:60});
       SFX.lifeLost(); SFX.lose(); Haptics.lifeLost();
     }
   },
@@ -356,6 +365,9 @@ export const Game = {
     if(d>0.45) bag.push("FAKEOUT");
     if(d>0.55 && Math.random()<0.35) bag.push("WHALE");
     if(this.meltdown) bag.push("WICK","LIQUIDATION","FAKEOUT");
+    // per-run bias — only leans toward an archetype that's already
+    // legitimately unlocked at this difficulty, never forces one early
+    if(this.runBias && bag.includes(this.runBias)) bag.push(this.runBias, this.runBias);
     const r = Rugs.spawn(pick(bag));
     if(r) this.stats.spawned++;
   },
