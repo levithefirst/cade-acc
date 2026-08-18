@@ -263,6 +263,13 @@ export const Teams = {
     t.speed = rnd(CFG.TEAM_SPEED[0], CFG.TEAM_SPEED[1]);
     t.grazed = false; t.grazeCooldown = 0;
     t.spawnedAtElapsed = CFG.RUN_SECONDS - Game.time; // for the team-lifetime telemetry metric
+    // exposed-state cycle — the depth addition from the polish synthesis:
+    // not a new system, a readable value-state on something that already
+    // exists. No requirement to wait for it — nerfing is always valid —
+    // but a nerf landed while exposed pays a real bonus, so the player
+    // gets a genuine "take the safe nerf now, or wait for the big one" choice.
+    t.exposed = false;
+    t.exposedTimer = rnd(3, 6); // staggered per-instance on purpose
     return t;
   },
 
@@ -278,6 +285,14 @@ export const Teams = {
 
       if(t.grazeCooldown>0) t.grazeCooldown -= dt;
       else t.grazed = false;
+
+      if(!t.disabled){
+        t.exposedTimer -= dt;
+        if(t.exposedTimer<=0){
+          if(t.exposed){ t.exposed=false; t.exposedTimer = rnd(3.5,6.5); }
+          else{ t.exposed=true; t.exposedTimer = 1.5; }
+        }
+      } else if(t.exposed){ t.exposed=false; }
 
       if(t.disabled){
         // panic/scatter drift while disabled — no directed AI, just decaying jitter
@@ -331,34 +346,50 @@ export const Teams = {
   // pulse) nerf. Mirrors Rugs.destroy(byDash)'s role exactly.
   nerf(t){
     if(!t.on || t.disabled) return;
-    t.disabled = true; t.state = "nerfed";
+    const wasExposed = t.exposed;
+    t.disabled = true; t.state = "nerfed"; t.exposed = false;
     t.disableT = CFG.TEAM_DISABLE_TIME;
     t.respawnT = 0;
     t.vx = rnd(-80,80); t.vy = rnd(-80,80);
 
     Game.stats.nerfs = (Game.stats.nerfs||0)+1;
-    Game.addScore(CFG.TEAM_NERF_SCORE*Game.multi, t.x, t.y, "NERFED");
-    Game.multi = Math.min(CFG.MULTI_MAX, Game.multi + CFG.TEAM_NERF_MULTI_BONUS);
+    const scoreMult = wasExposed ? 2 : 1;
+    Game.addScore(CFG.TEAM_NERF_SCORE*Game.multi*scoreMult, t.x, t.y, wasExposed?"EXPOSED NERF":"NERFED");
+    Game.multi = Math.min(CFG.MULTI_MAX, Game.multi + CFG.TEAM_NERF_MULTI_BONUS*(wasExposed?1.6:1));
     Game.bestMulti = Math.max(Game.bestMulti, Game.multi);
-    Game.hitstop = Math.max(Game.hitstop, CFG.HITSTOP_DASHKILL);
+    Game.hitstop = Math.max(Game.hitstop, CFG.HITSTOP_DASHKILL*(wasExposed?1.3:1));
 
     const elapsed = CFG.RUN_SECONDS - Game.time;
     const lifetime = elapsed - (t.spawnedAtElapsed||elapsed);
     Telemetry.nerfEvent(t.roster.id, Game.multi, elapsed, lifetime);
 
     const c = t.roster.accent;
-    FX.kick(13); FX.invertHit(0.4); FX.glitchHit(0.55); FX.vignette(0.5, c);
-    Parts.spawn(t.x,t.y,24,{c, smin:110,smax:400,rmin:2,rmax:5,spark:true});
-    Rings.spawn(t.x,t.y,{r0:t.r*0.6, max:t.r*4, dur:0.42, c, w:3.5});
+    FX.kick(wasExposed?18:13); FX.invertHit(wasExposed?0.55:0.4); FX.glitchHit(0.55); FX.vignette(wasExposed?0.65:0.5, wasExposed?Theme.colors().yellow:c);
+    Parts.spawn(t.x,t.y,wasExposed?36:24,{c, smin:110,smax:wasExposed?520:400,rmin:2,rmax:5,spark:true});
+    Rings.spawn(t.x,t.y,{r0:t.r*0.6, max:t.r*(wasExposed?5.5:4), dur:0.42, c, w:3.5});
     const line = t.roster.lines[rint(0,t.roster.lines.length-1)];
     Floaters.add(t.x, t.y-t.r-14*S, line, c, 14);
-    Floaters.add(t.x, t.y-t.r-32*S, `NERFED: ${t.roster.name.toUpperCase()}`, "#FFFFFF", 12);
+    Floaters.add(t.x, t.y-t.r-32*S, `${wasExposed?"EXPOSED — ":""}NERFED: ${t.roster.name.toUpperCase()}`, wasExposed?Theme.colors().yellow:"#FFFFFF", 12);
     SFX.bigPump(); Haptics.boost();
   },
 
   draw(){
+    const tc = Theme.colors();
     for(const t of this.pool){
       if(!t.on) continue;
+
+      // exposed telegraph — a bright ring outside the character, pulsing
+      // faster as the window is about to close, so "take it now" reads clearly
+      if(t.exposed){
+        const pulse = 0.6+Math.sin(performance.now()/85)*0.4;
+        ctx.save();
+        ctx.strokeStyle = tc.yellow; ctx.lineWidth = 2.2*S;
+        ctx.globalAlpha = pulse;
+        ctx.beginPath(); ctx.arc(t.x, t.y, t.r+8*S, 0, TAU); ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
       ctx.save();
       ctx.translate(t.x, t.y);
       if(t.disabled) ctx.globalAlpha = 0.55 + Math.sin(t.age*10)*0.15;
@@ -369,8 +400,9 @@ export const Teams = {
       if(!t.disabled){
         ctx.save();
         ctx.font = `700 ${10*S}px ui-monospace, monospace`;
-        ctx.textAlign = "center"; ctx.fillStyle = "rgba(255,255,255,.55)";
-        ctx.fillText(t.roster.name, t.x, t.y - t.r - 8*S);
+        ctx.textAlign = "center";
+        ctx.fillStyle = t.exposed ? tc.yellow : "rgba(255,255,255,.55)";
+        ctx.fillText(t.exposed ? `${t.roster.name} ⚡` : t.roster.name, t.x, t.y - t.r - 8*S);
         ctx.restore();
       }
     }
