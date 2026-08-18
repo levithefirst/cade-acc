@@ -48,8 +48,8 @@
   <p class="rules">
     Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br>
     <span class="k">SPACE</span> / <span class="k">⚡ button</span> = <b>APE DASH</b>. Dash through a team leader to <b>nerf</b> them.<br>
-    You've got <b>3 lives</b>. Touching a team or a rug without dashing costs a life. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>
-    Green pumps pay out multiplied — <b>3 in a row</b> fills your energy bar for a speed boost.<br>
+    You've got <b>3 lives</b>. Touching a team or a rug without dashing <span class="c-danger">costs a life</span>. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>
+    Green pumps pay out multiplied — <span class="c-gold">3 in a row fills your energy bar</span> for a speed boost.<br>
     <b>Nerf as many teams as you can before the buzzer.</b>
   </p>
   <div class="row">
@@ -62,10 +62,6 @@
   <canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas>
   <div class="eyebrow">Cade Ops</div>
   <div class="rank">GLOBAL LEADERBOARD</div>
-  <div class="name-group">
-    <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
-    <div class="name-hint" id="nameHint"></div>
-  </div>
   <div class="ranksub" id="lbStatus">Loading...</div>
   <div class="lb-list glass" id="lbList"></div>
   <div class="row">
@@ -88,6 +84,10 @@
   <div class="stats stats-secondary" id="eStatsSecondary"></div>
   <div class="hs" id="eHigh"></div>
   <div class="hs" id="eGlobalRank"></div>
+  <div class="name-group name-group-results">
+    <input class="name-input" id="playerNameInput" minlength="10" maxlength="16" placeholder="Your name" aria-label="Your name for the leaderboard, minimum 10 characters, changeable twice">
+    <div class="name-hint" id="nameHint"></div>
+  </div>
   <div class="tweetbox" id="eTweet"></div>
   <div class="row">
     <button class="btn" id="btnAgain">Run It Back</button>
