@@ -1,6 +1,5 @@
 /* CADE OPS — THE 6 NERFS
-   Roster UI + character presentation. Combat behavior lives in combat-ai.js. */
-import "./combat-ai.js";
+   Roster UI + character presentation. Combat behavior is loaded before this module. */
 import { Game, ctx } from "./main.js";
 import { Teams, TEAM_ROSTER } from "./teams.js";
 import { startRun } from "./ui.js";
