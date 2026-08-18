@@ -17,7 +17,7 @@ import { show, scTitle, scLeaderboard, paintDomMark } from "./ui.js";
 const nameInput = document.getElementById("playerNameInput");
 const nameHint = document.getElementById("nameHint");
 
-(function initPlayerName(){
+export function initPlayerName(){
   const s = Store.read();
   let name = s.playerName;
   if(!name){
@@ -27,7 +27,7 @@ const nameHint = document.getElementById("nameHint");
   }
   nameInput.value = name;
   updateNameState();
-})();
+}
 
 function updateNameState(){
   const s = Store.read();
