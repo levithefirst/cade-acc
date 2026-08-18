@@ -1,811 +1,150 @@
-/*
-  CADE OPS — THE 6 NERFS
-
-  Adds:
-  1. A character page between HOW TO PLAY and the game.
-  2. Clickable X profiles for all six characters.
-  3. The six team leaders actively hunting the player during runs.
-
-  Existing game systems remain responsible for:
-  - spawning
-  - collisions
-  - nerfing
-  - scoring
-  - lives
-  - respawning
+/* CADE OPS — THE 6 NERFS
+   Roster UI + fair hunter AI. Character art is procedural canvas art, so
+   the page has no external PFP dependency or broken image path to fail on Vercel.
 */
-
 import { Game } from "./main.js";
 import { Teams, TEAM_ROSTER } from "./teams.js";
 import { Player } from "./player.js";
-import { CFG } from "./config.js";
-
-const nerfsScreen = document.getElementById("scNerfs");
-const nerfsGrid = document.getElementById("nerfsGrid");
-const howToPlay = document.getElementById("scHowToPlay");
-
-if (!nerfsScreen || !nerfsGrid) {
-  console.warn("CADE OPS: THE 6 NERFS screen was not found.");
-} else {
-
-  const X_HANDLES = {
-    steve: "steoniy",
-    gnar: "gnarzill",
-    kosgood: "kosgoood",
-    scotty: "scottybmitchell",
-    rookmate: "0xRookmate",
-    poppunk: "PopPunkOnChain"
-  };
-
-  /*
-    PAGE STYLING
-    Uses the same Bungee font and visual language already loaded
-    by the main CADE OPS page.
-  */
-
-  const style = document.createElement("style");
-
-  style.textContent = `
-    #scNerfs {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-
-      box-sizing: border-box;
-
-      padding:
-        calc(24px + env(safe-area-inset-top))
-        16px
-        calc(20px + env(safe-area-inset-bottom));
-
-      overflow-y: auto;
-      overflow-x: hidden;
-
-      align-items: center;
-      justify-content: flex-start;
-
-      background:
-        radial-gradient(
-          circle at 50% 20%,
-          rgba(255,168,0,.16),
-          transparent 45%
-        ),
-        linear-gradient(
-          180deg,
-          rgba(10,10,10,.97),
-          rgba(18,18,18,.99)
-        );
-    }
-
-    #scNerfs .eyebrow {
-      margin-top: 4px;
-    }
-
-    .nerfs-heading {
-      margin-top: 4px;
-
-      text-shadow:
-        0 0 18px rgba(255,168,0,.28),
-        0 0 40px rgba(255,168,0,.12);
-    }
-
-    .nerfs-subtitle {
-      margin-top: 5px;
-      margin-bottom: 18px;
-      text-align: center;
-    }
-
-    .nerfs-grid {
-      width: min(100%, 720px);
-
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-
-      gap: 10px;
-    }
-
-    .nerf-card {
-      position: relative;
-
-      min-width: 0;
-
-      padding: 9px;
-
-      border-radius: 17px;
-
-      background:
-        linear-gradient(
-          145deg,
-          rgba(255,255,255,.10),
-          rgba(255,255,255,.025)
-        );
-
-      border: 1px solid rgba(255,255,255,.11);
-
-      box-shadow:
-        0 14px 30px rgba(0,0,0,.30),
-        inset 0 1px 0 rgba(255,255,255,.08);
-
-      overflow: hidden;
-
-      text-align: center;
-
-      transition:
-        transform .18s ease,
-        border-color .18s ease;
-    }
-
-    .nerf-card::before {
-      content: "";
-
-      position: absolute;
-
-      left: 0;
-      top: 0;
-      bottom: 0;
-
-      width: 3px;
-
-      background: var(--nerf-accent);
-
-      box-shadow:
-        0 0 15px var(--nerf-accent);
-    }
-
-    .nerf-card:active {
-      transform: scale(.97);
-    }
-
-    .nerf-portrait {
-      display: block;
-
-      width: 100%;
-      height: 118px;
-
-      border-radius: 12px;
-
-      background:
-        radial-gradient(
-          circle at 50% 45%,
-          rgba(255,168,0,.18),
-          rgba(0,0,0,.20) 70%
-        );
-    }
-
-    .nerf-name {
-      display: block;
-
-      margin-top: 8px;
-
-      color: #fff;
-
-      font-family:
-        Bungee,
-        Arial Black,
-        Impact,
-        sans-serif;
-
-      font-size: 14px;
-      line-height: 1.15;
-
-      text-decoration: none;
-    }
-
-    .nerf-name:hover,
-    .nerf-name:focus {
-      color: #ffa800;
-    }
-
-    .nerf-x {
-      display: block;
-
-      margin-top: 5px;
-
-      color: rgba(255,255,255,.52);
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 8px;
-      font-weight: 700;
-
-      text-decoration: none;
-
-      overflow-wrap: anywhere;
-    }
-
-    .nerf-x:hover,
-    .nerf-x:focus {
-      color: #ffa800;
-    }
-
-    .nerf-label {
-      margin-top: 7px;
-
-      color: rgba(255,255,255,.34);
-
-      font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        monospace;
-
-      font-size: 7px;
-      font-weight: 700;
-
-      letter-spacing: .08em;
-    }
-
-    .nerfs-actions {
-      margin-top: 16px;
-      padding-bottom: 4px;
-    }
-
-    @media (max-height: 700px) {
-
-      #scNerfs {
-        padding-top: 14px;
-      }
-
-      .nerfs-subtitle {
-        margin-bottom: 9px;
-      }
-
-      .nerf-portrait {
-        height: 92px;
-      }
-
-      .nerf-card {
-        padding: 7px;
-      }
-
-      .nerfs-actions {
-        margin-top: 10px;
-      }
-    }
-
-    @media (min-width: 700px) {
-
-      .nerfs-grid {
-        grid-template-columns:
-          repeat(3, minmax(0, 1fr));
-      }
-
-      .nerf-portrait {
-        height: 150px;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-
-
-  function showScreen(screen) {
-
-    document
-      .querySelectorAll(".screen")
-      .forEach(s => {
-        s.classList.remove("on");
-        s.classList.remove("first-in");
-      });
-
-    screen.classList.add("on");
-    screen.classList.add("first-in");
-
-    screen.scrollTop = 0;
-  }
-
-
-  /*
-    Render each existing game character into a portrait canvas.
-    This keeps the page synchronized with the actual in-game roster.
-  */
-
-  function drawPortrait(canvas, roster) {
-
-    if (!roster || !canvas) return;
-
-    const dpr =
-      Math.min(
-        window.devicePixelRatio || 1,
-        2
-      );
-
-    const width =
-      canvas.clientWidth || 280;
-
-    const height =
-      canvas.clientHeight || 118;
-
-    canvas.width =
-      width * dpr;
-
-    canvas.height =
-      height * dpr;
-
-    const ctx =
-      canvas.getContext("2d");
-
-    ctx.setTransform(
-      dpr,
-      0,
-      0,
-      dpr,
-      0,
-      0
-    );
-
-
-    const bg =
-      ctx.createLinearGradient(
-        0,
-        0,
-        0,
-        height
-      );
-
-    bg.addColorStop(
-      0,
-      "rgba(255,168,0,.12)"
-    );
-
-    bg.addColorStop(
-      1,
-      "rgba(0,0,0,.24)"
-    );
-
-    ctx.fillStyle = bg;
-
-    ctx.fillRect(
-      0,
-      0,
-      width,
-      height
-    );
-
-
-    ctx.save();
-
-    ctx.translate(
-      width / 2,
-      height * .67
-    );
-
-    const scale =
-      Math.min(
-        1.45,
-        height / 92
-      );
-
-    ctx.scale(
-      scale,
-      scale
-    );
-
-
-    const fakeTeam = {
-      disabled: false,
-      age: 1,
-      exposed: false
-    };
-
-
-    roster.draw(
-      ctx,
-      fakeTeam,
-      1
-    );
-
-    ctx.restore();
-
-
-    const glow =
-      ctx.createLinearGradient(
-        0,
-        height * .65,
-        0,
-        height
-      );
-
-    glow.addColorStop(
-      0,
-      "rgba(255,168,0,0)"
-    );
-
-    glow.addColorStop(
-      1,
-      "rgba(255,168,0,.10)"
-    );
-
-    ctx.fillStyle = glow;
-
-    ctx.fillRect(
-      0,
-      height * .65,
-      width,
-      height * .35
-    );
-  }
-
-
-  function renderRoster() {
-
-    if (
-      !TEAM_ROSTER ||
-      !TEAM_ROSTER.length
-    ) {
-      console.warn(
-        "CADE OPS: TEAM_ROSTER unavailable."
-      );
-
-      return;
-    }
-
-
-    nerfsGrid.innerHTML = "";
-
-
-    TEAM_ROSTER
-      .slice(0, 6)
-      .forEach((roster, index) => {
-
-        let handle =
-          X_HANDLES[roster.id];
-
-
-        if (!handle) {
-          handle =
-            String(roster.name || "")
-              .replace(/\s+/g, "");
-        }
-
-
-        const card =
-          document.createElement("article");
-
-        card.className =
-          "nerf-card";
-
-        card.style.setProperty(
-          "--nerf-accent",
-          roster.accent || "#ffa800"
-        );
-
-
-        const portrait =
-          document.createElement("canvas");
-
-        portrait.className =
-          "nerf-portrait";
-
-        portrait.setAttribute(
-          "aria-label",
-          roster.name
-        );
-
-
-        const name =
-          document.createElement("a");
-
-        name.className =
-          "nerf-name";
-
-        name.textContent =
-          roster.name;
-
-        name.href =
-          `https://x.com/${handle}`;
-
-        name.target =
-          "_blank";
-
-        name.rel =
-          "noopener noreferrer";
-
-
-        const x =
-          document.createElement("a");
-
-        x.className =
-          "nerf-x";
-
-        x.textContent =
-          `x.com/${handle}`;
-
-        x.href =
-          `https://x.com/${handle}`;
-
-        x.target =
-          "_blank";
-
-        x.rel =
-          "noopener noreferrer";
-
-
-        const label =
-          document.createElement("div");
-
-        label.className =
-          "nerf-label";
-
-        label.textContent =
-          `NERF TARGET · ${String(index + 1).padStart(2, "0")}`;
-
-
-        card.appendChild(
-          portrait
-        );
-
-        card.appendChild(
-          name
-        );
-
-        card.appendChild(
-          x
-        );
-
-        card.appendChild(
-          label
-        );
-
-
-        nerfsGrid.appendChild(
-          card
-        );
-
-
-        drawPortrait(
-          portrait,
-          roster
-        );
-      });
-  }
-
-
-  renderRoster();
-
-
-  /*
-    HOW TO PLAY → THE 6 NERFS
-  */
-
-  const howButton =
-    document.getElementById(
-      "btnHowToPlayBack"
-    );
-
-  if (howButton) {
-
-    howButton.addEventListener(
-      "click",
-      event => {
-
-        event.preventDefault();
-
-        event.stopImmediatePropagation();
-
-        showScreen(
-          nerfsScreen
-        );
-      },
-      true
-    );
-  }
-
-
-  /*
-    THE 6 NERFS → HOW TO PLAY
-  */
-
-  const backButton =
-    document.getElementById(
-      "btnNerfsBack"
-    );
-
-  if (backButton) {
-
-    backButton.addEventListener(
-      "click",
-      event => {
-
-        event.preventDefault();
-
-        showScreen(
-          howToPlay
-        );
-      }
-    );
-  }
-
-
-  /*
-    THE 6 NERFS → GAME
-  */
-
-  const startButton =
-    document.getElementById(
-      "btnNerfsStart"
-    );
-
-  if (startButton) {
-
-    startButton.addEventListener(
-      "click",
-      event => {
-
-        event.preventDefault();
-
-        const originalStart =
-          document.getElementById(
-            "btnStart"
-          );
-
-        if (originalStart) {
-          originalStart.click();
-        }
-      }
-    );
-  }
-
-
-  /*
-    ============================================================
-    HUNTER AI
-    ============================================================
-
-    The existing Teams.update() still handles:
-    - roaming
-    - pump seeking
-    - collisions
-    - nerfing
-    - respawning
-
-    This adds a steering force toward the player so
-    all six characters actively hunt from the beginning.
-  */
-
-  const originalTeamsUpdate =
-    Teams.update.bind(Teams);
-
-
-  Teams.update =
-    function hunterTeamsUpdate(dt) {
-
-      originalTeamsUpdate(dt);
-
-
-      if (Game.scene !== "play") {
-        return;
-      }
-
-
-      const arenaWidth =
-        window.innerWidth;
-
-      const arenaHeight =
-        window.innerHeight;
-
-
-      for (const team of this.pool) {
-
-        if (
-          !team.on ||
-          team.disabled
-        ) {
-          continue;
-        }
-
-
-        const dx =
-          Player.x -
-          team.x;
-
-        const dy =
-          Player.y -
-          team.y;
-
-        const distance =
-          Math.hypot(
-            dx,
-            dy
-          ) || 1;
-
-
-        /*
-          Leave a small reaction window.
-        */
-
-        if (
-          distance <
-          team.r + 32
-        ) {
-          continue;
-        }
-
-
-        const baseSpeed =
-          CFG.TEAM_SPEED[1] || 100;
-
-        const hunterSpeed =
-          baseSpeed * 1.08;
-
-
-        const targetVX =
-          (dx / distance) *
-          hunterSpeed;
-
-        const targetVY =
-          (dy / distance) *
-          hunterSpeed;
-
-
-        const steering =
-          Math.min(
-            1,
-            dt * 2.2
-          );
-
-
-        team.vx +=
-          (
-            targetVX -
-            team.vx
-          ) *
-          steering;
-
-
-        team.vy +=
-          (
-            targetVY -
-            team.vy
-          ) *
-          steering;
-
-
-        /*
-          Small additional movement.
-        */
-
-        team.x +=
-          team.vx *
-          dt *
-          0.20;
-
-        team.y +=
-          team.vy *
-          dt *
-          0.20;
-
-
-        /*
-          Keep them inside the arena.
-        */
-
-        team.x =
-          Math.max(
-            team.r,
-            Math.min(
-              arenaWidth - team.r,
-              team.x
-            )
-          );
-
-
-        team.y =
-          Math.max(
-            team.r,
-            Math.min(
-              arenaHeight - team.r,
-              team.y
-            )
-          );
-
-
-        team.state =
-          "chase";
-      }
-    };
+import { CFG, clamp, TAU } from "./config.js";
+import { startRun, show } from "./ui.js";
+
+const screen = document.getElementById("scNerfs");
+const grid = document.getElementById("nerfsGrid");
+const how = document.getElementById("scHowToPlay");
+if (!screen || !grid) throw new Error("CADE OPS: The 6 Nerfs screen is missing.");
+
+const X = {
+  steve: "steoniy",
+  gnar: "gnarzilla",
+  kosgood: "kosgoood",
+  scotty: "scottybmitchell",
+  rookmate: "0xRookmate",
+  poppunk: "PopPunkOnChain"
+};
+
+const PROFILE = {
+  steve:    { weapon:"BAT",      color:"#FC8400", style:"melee",    speed:1.08, ideal:78,  wiggle:0.15 },
+  gnar:     { weapon:"BLASTER",  color:"#00C2FF", style:"ranged",   speed:0.82, ideal:205, wiggle:0.55 },
+  kosgood:  { weapon:"BOW",      color:"#FF2D9E", style:"ranged",   speed:0.94, ideal:165, wiggle:0.80 },
+  scotty:   { weapon:"HAMMER",   color:"#8A8F98", style:"melee",    speed:0.76, ideal:95,  wiggle:0.10 },
+  rookmate: { weapon:"RAILGUN",  color:"#F0F024", style:"sniper",   speed:0.70, ideal:275, wiggle:0.25 },
+  poppunk:  { weapon:"KATANA",   color:"#7DE8FF", style:"hybrid",   speed:1.00, ideal:125, wiggle:1.05 }
+};
+
+function css(){
+  const s=document.createElement("style");
+  s.textContent=`
+    #scNerfs{position:fixed;inset:0;z-index:20;box-sizing:border-box;padding:calc(20px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden;align-items:center;justify-content:flex-start;background:radial-gradient(circle at 50% 14%,rgba(255,168,0,.16),transparent 42%),linear-gradient(180deg,rgba(9,9,10,.98),rgba(17,17,18,.99));}
+    #scNerfs .eyebrow{margin-top:2px}.nerfs-heading{text-shadow:0 0 18px rgba(255,168,0,.28)}.nerfs-subtitle{margin:4px 0 16px;text-align:center}
+    .nerfs-grid{width:min(100%,820px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .nerf-card{position:relative;min-width:0;padding:8px;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.11);box-shadow:0 14px 34px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;text-align:center;transition:transform .16s ease,border-color .16s ease}
+    .nerf-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--accent);box-shadow:0 0 18px var(--accent)}
+    .nerf-card:active{transform:scale(.975)}
+    .nerf-portrait{display:block;width:100%;height:132px;border-radius:13px;background:radial-gradient(circle at 50% 42%,rgba(255,168,0,.14),rgba(0,0,0,.22) 72%)}
+    .nerf-name{display:block;margin-top:8px;color:#fff;font-family:Bungee,Arial Black,Impact,sans-serif;font-size:14px;line-height:1.12;text-decoration:none}.nerf-name:hover,.nerf-name:focus{color:var(--accent)}
+    .nerf-x{display:block;margin-top:4px;color:rgba(255,255,255,.48);font:700 8px ui-monospace,SFMono-Regular,Menlo,monospace;text-decoration:none;overflow-wrap:anywhere}.nerf-x:hover,.nerf-x:focus{color:var(--accent)}
+    .nerf-weapon{display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:4px 7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);font:900 7px Bungee,Arial Black,Impact,sans-serif;letter-spacing:.04em}
+    .nerf-label{margin-top:6px;color:rgba(255,255,255,.28);font:700 7px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}
+    .nerfs-actions{margin-top:15px;padding-bottom:4px}
+    @media(min-width:700px){.nerfs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.nerf-portrait{height:166px}}
+    @media(max-height:700px){#scNerfs{padding-top:12px}.nerfs-subtitle{margin-bottom:8px}.nerf-portrait{height:96px}.nerf-card{padding:6px}.nerfs-actions{margin-top:9px}}
+  `;document.head.appendChild(s);
 }
+css();
+
+function switchScreen(target){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on","first-in"));
+  target.classList.add("on","first-in");
+  target.scrollTop=0;
+}
+
+function weapon(g,p,r,phase=0){
+  g.save();g.lineCap="round";g.lineJoin="round";g.shadowColor=p.color;g.shadowBlur=r*.18;
+  const a=phase;
+  if(p.weapon==="BAT"){
+    g.rotate(-.55+a*.05);g.strokeStyle="#6E4228";g.lineWidth=r*.18;g.beginPath();g.moveTo(r*.45,r*.55);g.lineTo(r*1.15,-r*.75);g.stroke();g.strokeStyle=p.color;g.lineWidth=r*.34;g.beginPath();g.moveTo(r*.98,-r*.9);g.lineTo(r*1.25,-r*1.05);g.stroke();
+  }else if(p.weapon==="BLASTER"){
+    g.fillStyle="#111";g.strokeStyle=p.color;g.lineWidth=r*.07;g.beginPath();g.roundRect(r*.35,-r*.1,r*.92,r*.35,r*.08);g.fill();g.stroke();g.fillStyle=p.color;g.fillRect(r*1.15,-r*.03,r*.24,r*.16);g.beginPath();g.arc(r*.68,-r*.25,r*.11,0,TAU);g.fill();
+  }else if(p.weapon==="BOW"){
+    g.strokeStyle=p.color;g.lineWidth=r*.07;g.beginPath();g.arc(r*.55,0,r*.68,-1.15,1.15);g.stroke();g.strokeStyle="#FFF";g.lineWidth=r*.035;g.beginPath();g.moveTo(r*.1,-r*.62);g.lineTo(r*.1,r*.62);g.stroke();g.strokeStyle=p.color;g.lineWidth=r*.06;g.beginPath();g.moveTo(r*.1,-r*.62);g.lineTo(r*.85,-r*.62);g.stroke();
+  }else if(p.weapon==="HAMMER"){
+    g.rotate(.45);g.strokeStyle="#555";g.lineWidth=r*.14;g.beginPath();g.moveTo(r*.4,r*.65);g.lineTo(r*1.15,-r*.75);g.stroke();g.fillStyle="#B9BEC7";g.beginPath();g.roundRect(r*.75,-r*.98,r*.72,r*.32,r*.08);g.fill();g.strokeStyle=p.color;g.lineWidth=r*.06;g.stroke();
+  }else if(p.weapon==="RAILGUN"){
+    g.strokeStyle="#D8D8D8";g.lineWidth=r*.12;g.beginPath();g.moveTo(r*.15,r*.2);g.lineTo(r*1.42,-r*.35);g.stroke();g.strokeStyle=p.color;g.lineWidth=r*.05;g.beginPath();g.moveTo(r*.4,r*.1);g.lineTo(r*1.25,-r*.27);g.stroke();g.fillStyle=p.color;g.beginPath();g.arc(r*1.48,-r*.38,r*.09,0,TAU);g.fill();
+  }else{
+    g.rotate(.35+Math.sin(performance.now()/170)*.06);g.strokeStyle="#E7E7E7";g.lineWidth=r*.11;g.beginPath();g.moveTo(r*.3,r*.7);g.lineTo(r*1.22,-r*.75);g.stroke();g.strokeStyle=p.color;g.lineWidth=r*.045;g.beginPath();g.moveTo(r*.3,r*.7);g.lineTo(r*.53,r*.47);g.stroke();
+  }
+  g.shadowBlur=0;g.restore();
+}
+
+function portrait(canvas,def,i){
+  const p=PROFILE[def.id]||PROFILE.steve, dpr=Math.min(devicePixelRatio||1,2), w=canvas.clientWidth||260,h=canvas.clientHeight||132;
+  canvas.width=w*dpr;canvas.height=h*dpr;const g=canvas.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const glow=g.createRadialGradient(w*.5,h*.46,0,w*.5,h*.46,h*.75);glow.addColorStop(0,`${p.color}35`);glow.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=glow;g.fillRect(0,0,w,h);
+  const r=Math.min(w,h)*.29;g.save();g.translate(w*.48,h*.68);g.rotate(Math.sin(performance.now()/900+i)*.035);def.draw(g,{r,disabled:false,age:performance.now()/1000+i},1);weapon(g,p,r,performance.now()/1000+i);g.restore();
+  g.fillStyle="rgba(255,255,255,.035)";g.fillRect(0,h*.82,w,h*.18);g.fillStyle=p.color;g.globalAlpha=.65;g.fillRect(w*.08,h*.91,w*.84,2);g.globalAlpha=1;
+}
+
+function render(){
+  grid.innerHTML="";
+  TEAM_ROSTER.slice(0,6).forEach((def,i)=>{
+    const p=PROFILE[def.id]||PROFILE.steve, card=document.createElement("article");card.className="nerf-card";card.style.setProperty("--accent",p.color);
+    const c=document.createElement("canvas");c.className="nerf-portrait";c.setAttribute("aria-label",`${def.name} ${p.weapon}`);
+    const name=document.createElement("a");name.className="nerf-name";name.textContent=def.name;name.href=`https://x.com/${X[def.id]}`;name.target="_blank";name.rel="noopener noreferrer";
+    const x=document.createElement("a");x.className="nerf-x";x.textContent=`x.com/${X[def.id]}`;x.href=name.href;x.target="_blank";x.rel="noopener noreferrer";
+    const w=document.createElement("div");w.className="nerf-weapon";w.textContent=`◆ ${p.weapon}`;
+    const label=document.createElement("div");label.className="nerf-label";label.textContent=`NERF TARGET · ${String(i+1).padStart(2,"0")}`;
+    card.append(c,name,x,w,label);grid.appendChild(card);portrait(c,def,i);
+  });
+}
+render();
+
+/* HOW TO PLAY -> ROSTER. Capture phase prevents ui.js's old handler from
+   jumping straight into a run. */
+document.getElementById("btnHowToPlayBack")?.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();switchScreen(screen)},true);
+document.getElementById("btnNerfsBack")?.addEventListener("click",e=>{e.preventDefault();switchScreen(how)},false);
+document.getElementById("btnNerfsStart")?.addEventListener("click",e=>{e.preventDefault();startRun();},false);
+
+/* HUNTER AI. The core Teams system already owns spawn/collision/nerf/respawn.
+   We add a bounded steering layer after its normal movement. All six hunt
+   immediately, but each archetype has a readable preferred distance. */
+const originalUpdate=Teams.update.bind(Teams);
+Teams.update=function(dt){
+  originalUpdate(dt);
+  if(Game.scene!=="play")return;
+  const scale=Math.max(.62,Math.min(1.25,Math.min(innerWidth,innerHeight)/760));
+  for(const t of this.pool){
+    if(!t.on||t.disabled||!t.roster)continue;
+    const p=PROFILE[t.roster.id]||PROFILE.steve;
+    const dx=Player.x-t.x,dy=Player.y-t.y,d=Math.hypot(dx,dy)||1;
+    const nx=dx/d,ny=dy/d;
+    let tx=nx,ty=ny;
+    const orbit=Math.sin(t.age*1.8+(t.roster.id.length*1.7))*p.wiggle;
+    const ox=-ny*orbit,oy=nx*orbit;
+    if(d>p.ideal+45){tx=nx+ox*.38;ty=ny+oy*.38}
+    else if(d<p.ideal-45){tx=-nx+ox*.20;ty=-ny+oy*.20}
+    else {tx=ox;ty=oy}
+    const mag=Math.hypot(tx,ty)||1;tx/=mag;ty/=mag;
+    const speed=CFG.TEAM_SPEED[1]*p.speed*scale;
+    const blend=clamp(dt*2.4,0,1);
+    t.vx += (tx*speed-t.vx)*blend;t.vy += (ty*speed-t.vy)*blend;
+    t.x=clamp(t.x+t.vx*dt,t.r,innerWidth-t.r);t.y=clamp(t.y+t.vy*dt,t.r,innerHeight-t.r);
+  }
+};
+
+/* Draw weapon props over the existing character silhouettes. The original
+   draw routine remains responsible for all character rendering. */
+const originalDraw=Teams.draw.bind(Teams);
+Teams.draw=function(){
+  originalDraw();
+  for(const t of this.pool){
+    if(!t.on||t.disabled||!t.roster)continue;
+    const p=PROFILE[t.roster.id]||PROFILE.steve;
+    const g=document.getElementById("cv")?.getContext("2d");if(!g)continue;
+    g.save();g.translate(t.x,t.y);weapon(g,p,t.r,t.age);g.restore();
+  }
+};
+
+/* Keep the six roster portraits subtly alive while the screen is open. */
+let raf=0;function animateRoster(){if(screen.classList.contains("on")){grid.querySelectorAll(".nerf-portrait").forEach((c,i)=>{const d=TEAM_ROSTER[i];if(d)portrait(c,d,i)});}raf=requestAnimationFrame(animateRoster)}animateRoster();
+window.addEventListener("resize",()=>{if(screen.classList.contains("on"))render()},{passive:true});
