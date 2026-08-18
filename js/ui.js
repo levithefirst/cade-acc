@@ -50,7 +50,7 @@ export function drawCadeMark(g, x, y, r, opt={}){
   g.save();
   g.globalAlpha = opt.alpha!==undefined?opt.alpha:1;
   g.translate(x,y);
-  g.strokeStyle = opt.ring || "#FC8400"; g.lineWidth = Math.max(1.5, r*0.12);
+  g.strokeStyle = opt.ring || "#FFA800"; g.lineWidth = Math.max(1.5, r*0.12);
   g.beginPath(); g.arc(0,0,r,0.34*Math.PI,1.66*Math.PI); g.stroke();
   g.fillStyle = opt.cut || "#141414";
   g.beginPath();
@@ -76,7 +76,7 @@ export function drawTimer(){
     ctx.save();
     ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.globalAlpha = 0.13 + (1-frac)*0.17 + burn*0.10;
-    ctx.font = `900 ${Math.min(W,H)*(0.80+burn*0.14)*pop}px Arial Black, Impact, sans-serif`;
+    ctx.font = `900 ${Math.min(W,H)*(0.80+burn*0.14)*pop}px Bungee, Arial Black, Impact, sans-serif`;
     ctx.fillStyle = "#FF2A2A";
     ctx.fillText(secs, W/2, H/2);
     ctx.restore();
@@ -86,7 +86,7 @@ export function drawTimer(){
   const size = urgent ? 54*S : 40*S;
   const bob  = urgent ? Math.sin(performance.now()/90)*2.5*S : 0;
   ctx.textAlign="center"; ctx.textBaseline="top";
-  ctx.font = `900 ${size}px Arial Black, Impact, sans-serif`;
+  ctx.font = `900 ${size}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle = critical ? "#FF2A2A" : tc.cade;
   ctx.shadowColor = critical ? "#FF2A2A" : tc.cade; ctx.shadowBlur = urgent ? 26 : 12;
   const ss = Math.floor(t%60);
@@ -114,7 +114,7 @@ export function drawHUD(){
   // NERFS — the new hero number, per the brief. Score (Bag) is now the
   // smaller secondary line underneath, not the other way around.
   ctx.textAlign="left";
-  ctx.font=`900 ${34*S}px Arial Black, Impact, sans-serif`;
+  ctx.font=`900 ${34*S}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle=tc.cade;
   ctx.shadowColor=tc.cade; ctx.shadowBlur=10;
   ctx.fillText(String(Game.stats.nerfs||0), 18*S, 16*S);
@@ -194,7 +194,7 @@ export function drawHUD(){
   ctx.save();
   ctx.translate(W-18*S, 14*S);
   ctx.scale(pulse,pulse);
-  ctx.font=`900 ${38*S}px Arial Black, Impact, sans-serif`;
+  ctx.font=`900 ${38*S}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle = hot>0.62 ? "#FF2A2A" : hot>0.3 ? tc.yellow : tc.cade;
   if(hot>0.35){ ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=18+hot*26; }
   ctx.fillText(`${m.toFixed(2)}x`, 0, 0);
@@ -229,7 +229,7 @@ export function drawFreeze(){
   const t = Game.sceneT/CFG.FREEZE_SECONDS;
   const pop = 1+Math.max(0,(0.18-t))*3;
   ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.font=`900 ${Math.min(W*0.11, 76*S)*pop}px Arial Black, Impact, sans-serif`;
+  ctx.font=`900 ${Math.min(W*0.11, 76*S)*pop}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle="#3DC96B"; ctx.shadowColor="#3DC96B"; ctx.shadowBlur=40;
   ctx.fillText(`${Game.stats.nerfs||0} TEAMS NERFED`, W/2, H/2);
   ctx.shadowBlur=0;
@@ -262,7 +262,7 @@ export function drawOut(){
   ctx.fillStyle="rgba(255,255,255,.5)";
   ctx.fillText("MISSION", W/2, H*0.46 - 62*S*pop);
 
-  ctx.font=`900 ${Math.min(W*0.15, 100*S)*pop}px Arial Black, Impact, sans-serif`;
+  ctx.font=`900 ${Math.min(W*0.15, 100*S)*pop}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle="#FF2A2A"; ctx.shadowColor="#FF2A2A"; ctx.shadowBlur=44;
   ctx.fillText("WIPED", W/2, H*0.46);
   ctx.shadowBlur=0;
@@ -277,7 +277,7 @@ export function drawFinalRug(){
   ctx.save();
   ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.globalAlpha = 0.5+Math.sin(performance.now()/70)*0.3;
-  ctx.font=`900 ${Math.min(W*0.09,54*S)}px Arial Black, Impact, sans-serif`;
+  ctx.font=`900 ${Math.min(W*0.09,54*S)}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle="#FF2A2A";
   ctx.fillText("ONE MORE RUG", W/2, H*0.2);
   ctx.globalAlpha=1;
@@ -309,9 +309,6 @@ export function show(el){
   dashBtn.classList.remove("show");
 }
 
-document.getElementById("btnHowToPlay")?.addEventListener("click", ()=>{ SFX.ui(); show(scHowToPlay); });
-document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); show(scTitle); });
-
 export function startRun(){
   show(null);
   Game.reset();
@@ -321,7 +318,12 @@ export function startRun(){
   Music.start("normal");
   if(isTouchDevice) dashBtn.classList.add("show");
 }
-document.getElementById("btnStart").addEventListener("click", ()=>{ SFX.ui(); startRun(); });
+
+// Let's Cade -> How to Play (gate) -> then the run actually starts.
+// "Run It Back" on results skips this — that's a repeat player who
+// already knows the rules, gating them again would just be annoying.
+document.getElementById("btnStart").addEventListener("click", ()=>{ SFX.ui(); show(scHowToPlay); });
+document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); startRun(); });
 document.getElementById("btnAgain")?.addEventListener("click", ()=>{ SFX.ui(); startRun(); });
 
 // dedicated touch dash button — more reliable than double-tap during
@@ -563,7 +565,7 @@ export function paintRosterShowcase(){
       g.restore();
     }
     // static spark fragments around the break
-    g.fillStyle = "#FC8400";
+    g.fillStyle = "#FFA800";
     for(let i=0;i<7;i++){
       const a = (i/7)*TAU, d = baseW*0.55;
       g.beginPath(); g.arc(Math.cos(a)*d, Math.sin(a)*d, 1.6, 0, TAU); g.fill();
@@ -601,7 +603,7 @@ export function paintRosterShowcase(){
     for(let i=6;i>=1;i--){
       const t = i/6;
       g.globalAlpha = (1-t)*0.32;
-      g.fillStyle = "#FC8400";
+      g.fillStyle = "#FFA800";
       g.beginPath(); g.arc(-i*opR*0.42, i*opR*0.14, opR*t*0.85, 0, TAU); g.fill();
     }
     g.globalAlpha = 1;
@@ -609,7 +611,7 @@ export function paintRosterShowcase(){
     // glow
     const glowR = opR*3.2;
     const gg = g.createRadialGradient(0,0,0,0,0,glowR);
-    gg.addColorStop(0,"rgba(252,132,0,.45)"); gg.addColorStop(1,"rgba(252,132,0,0)");
+    gg.addColorStop(0,"rgba(255,168,0,.45)"); gg.addColorStop(1,"rgba(255,168,0,0)");
     g.fillStyle = gg; g.beginPath(); g.arc(0,0,glowR,0,TAU); g.fill();
 
     // body — same silhouette language as the real in-game operator
@@ -619,8 +621,8 @@ export function paintRosterShowcase(){
     g.arc(0,-1,8,Math.PI,0);
     g.lineTo(6.5,6.5); g.quadraticCurveTo(0,10.5,-6.5,6.5);
     g.closePath(); g.fill();
-    g.lineWidth = 1.5; g.strokeStyle = "#FC8400"; g.stroke();
-    g.fillStyle = "#FC8400"; g.fillRect(-5.5,-3.2,11,2.6);
+    g.lineWidth = 1.5; g.strokeStyle = "#FFA800"; g.stroke();
+    g.fillStyle = "#FFA800"; g.fillRect(-5.5,-3.2,11,2.6);
     g.globalAlpha = 0.85;
     g.beginPath();
     g.moveTo(0.8,3); g.lineTo(-1.6,6.4); g.lineTo(-0.3,6.4);
@@ -713,7 +715,7 @@ function buildShareCard(){
   const tc = Theme.colors();
   g.fillStyle = tc.bg; g.fillRect(0,0,cw,ch);
   const glow = g.createRadialGradient(cw/2,ch*0.4,0,cw/2,ch*0.4,cw*0.9);
-  glow.addColorStop(0,"rgba(252,132,0,.12)"); glow.addColorStop(1,"rgba(20,20,20,0)");
+  glow.addColorStop(0,"rgba(255,168,0,.12)"); glow.addColorStop(1,"rgba(20,20,20,0)");
   g.fillStyle=glow; g.fillRect(0,0,cw,ch);
 
   g.save(); g.translate(cw/2,ch*0.4);
@@ -739,15 +741,15 @@ function buildShareCard(){
     g.fillText("MISSION", 71, 132);
   }
   g.fillStyle = Game.survivedFinal ? "#3DC96B" : "#FF2A2A";
-  g.font="900 52px Arial Black, Impact, sans-serif";
+  g.font="900 52px Bungee, Arial Black, Impact, sans-serif";
   g.fillText(Game.survivedFinal ? "ARENA CLEARED" : "WIPED AT THE BUZZER", 70, 180);
 
   g.fillStyle=tc.dim; g.font="700 24px ui-monospace, monospace";
   g.fillText("TEAMS NERFED", 70, 300);
-  g.fillStyle=tc.cade; g.font="900 168px Arial Black, Impact, sans-serif";
+  g.fillStyle=tc.cade; g.font="900 168px Bungee, Arial Black, Impact, sans-serif";
   g.fillText(String(st.nerfs||0), 66, 460);
 
-  g.fillStyle=tc.text; g.font="900 54px Arial Black, Impact, sans-serif";
+  g.fillStyle=tc.text; g.font="900 54px Bungee, Arial Black, Impact, sans-serif";
   g.fillText(rk.title, 70, 560);
 
   const chips = [
@@ -762,7 +764,7 @@ function buildShareCard(){
     g.fillStyle="#1C1C1C"; g.fillRect(x,chipY,chipW,chipH);
     g.strokeStyle="#2A2A2A"; g.lineWidth=2; g.strokeRect(x,chipY,chipW,chipH);
     g.fillStyle="#FFFFFF"; g.textAlign="left";
-    g.font="900 42px Arial Black, Impact, sans-serif";
+    g.font="900 42px Bungee, Arial Black, Impact, sans-serif";
     g.fillText(String(v), x+16, chipY+90);
     g.fillStyle="#7A7A8C"; g.font="700 17px ui-monospace, monospace";
     wrapText(g, l, x+16, chipY+130, chipW-24, 20);

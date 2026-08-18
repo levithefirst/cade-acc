@@ -37,19 +37,26 @@ export const Pumps = {
       const fade  = p.life<1.6 ? (Math.floor(p.life*10)%2?0.3:1) : 1;
       const rr = p.r*pulse*p.born;
       ctx.globalAlpha = fade;
+
       const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rr*3.2);
       g.addColorStop(0,"rgba(61,201,107,.40)"); g.addColorStop(1,"rgba(61,201,107,0)");
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,rr*3.2,0,TAU); ctx.fill();
-      ctx.fillStyle="#3DC96B";
-      ctx.beginPath(); ctx.arc(p.x,p.y,rr,0,TAU); ctx.fill();
-      // up-arrow
-      ctx.fillStyle="#04240F";
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y-rr*0.55); ctx.lineTo(p.x+rr*0.5, p.y+rr*0.15);
-      ctx.lineTo(p.x+rr*0.18, p.y+rr*0.15); ctx.lineTo(p.x+rr*0.18, p.y+rr*0.55);
-      ctx.lineTo(p.x-rr*0.18, p.y+rr*0.55); ctx.lineTo(p.x-rr*0.18, p.y+rr*0.15);
-      ctx.lineTo(p.x-rr*0.5, p.y+rr*0.15);
-      ctx.closePath(); ctx.fill();
+
+      // candlestick shape — wide body, thin wicks top and bottom, matching
+      // the real trading-chart reference exactly (this is a Cade Market
+      // game, "green candle" is the actual on-brand pump icon now)
+      const bodyW = rr*1.15, bodyH = rr*1.9;
+      const wickW = bodyW*0.16, wickLen = rr*0.55;
+      ctx.fillStyle = "#3DC96B";
+      ctx.shadowColor = "#3DC96B"; ctx.shadowBlur = 10;
+      // top wick
+      ctx.fillRect(p.x-wickW/2, p.y-bodyH/2-wickLen, wickW, wickLen);
+      // bottom wick
+      ctx.fillRect(p.x-wickW/2, p.y+bodyH/2, wickW, wickLen);
+      // body
+      ctx.fillRect(p.x-bodyW/2, p.y-bodyH/2, bodyW, bodyH);
+      ctx.shadowBlur = 0;
+
       ctx.globalAlpha=1;
     }
   }

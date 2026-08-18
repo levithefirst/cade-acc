@@ -64,16 +64,16 @@ export const Store = (()=>{
 
 /* ============================================================
    THEME
-   KNOWN OPEN ITEM: light-mode bg (#B5A886) reads flat/muddy against
-   white glass panels — mid-fix in the source game when this
-   conversion happened. Ported as-is; not considered finished.
+   "light" mode is the bright-gold theme (see the CSS token block for
+   the actual palette) — the old flat/muddy tan light-theme issue this
+   comment used to flag is resolved; that theme no longer exists.
    ============================================================ */
 export const Theme = {
   mode: "dark",
   colors(){
     return this.mode === "light"
-      ? { bg:"#B5A886", grid:"rgba(20,15,5,.06)", text:"#1A1712", cade:"#E06C00", yellow:"#C7A600", dim:"#6B6459", cut:"#B5A886" }
-      : { bg:"#141414", grid:"rgba(252,132,0,.045)", text:"#FFFFFF", cade:"#FC8400", yellow:"#F0F024", dim:"#6A6A7C", cut:"#141414" };
+      ? { bg:"#FFB514", grid:"rgba(20,15,5,.07)", text:"#141414", cade:"#FFA800", yellow:"#141414", dim:"#2F2F2F", cut:"#FFB514" }
+      : { bg:"#141414", grid:"rgba(255,168,0,.045)", text:"#FFFFFF", cade:"#FFA800", yellow:"#F0F024", dim:"#8A8A8A", cut:"#141414" };
   },
   apply(mode){
     this.mode = mode==="light" ? "light" : "dark";
@@ -234,7 +234,7 @@ export const Game = {
   addScore(n, x, y, label){
     n = Math.round(n);
     this.score += n;
-    if(x!==undefined) Floaters.add(x, y-22*S, (label?label+" ":"+")+n, "#FC8400", label?15:19);
+    if(x!==undefined) Floaters.add(x, y-22*S, (label?label+" ":"+")+n, "#FFA800", label?15:19);
   },
 
   bumpMulti(x,y){
@@ -251,9 +251,9 @@ export const Game = {
     FX.kick(3.2+Math.min(9,this.multi*0.45)+(milestone?7:0));
     FX.glitchHit(0.35+Math.min(0.5,this.multi*0.04)+(milestone?0.35:0));
     FX.chroma = Math.min(1, 0.3+this.multi*0.06);
-    FX.vignette(milestone?0.5:0.16+Math.min(0.14,this.multi*0.012), milestone?Theme.colors().yellow:"#FC8400");
-    Parts.spawn(x,y, milestone?10:4, {c:milestone?Theme.colors().yellow:"#FC8400",smin:60,smax:milestone?360:200,lmin:.15,lmax:.4,spark:true});
-    Rings.spawn(x,y,{r0:6,max:milestone?70:34,dur:milestone?0.5:0.3,c:milestone?Theme.colors().yellow:"#FC8400",w:milestone?4:2});
+    FX.vignette(milestone?0.5:0.16+Math.min(0.14,this.multi*0.012), milestone?Theme.colors().yellow:"#FFA800");
+    Parts.spawn(x,y, milestone?10:4, {c:milestone?Theme.colors().yellow:"#FFA800",smin:60,smax:milestone?360:200,lmin:.15,lmax:.4,spark:true});
+    Rings.spawn(x,y,{r0:6,max:milestone?70:34,dur:milestone?0.5:0.3,c:milestone?Theme.colors().yellow:"#FFA800",w:milestone?4:2});
     SFX.graze(this.multi); Haptics.graze();
 
     if(milestone){
@@ -556,8 +556,8 @@ export const Game = {
         this.finalRugHold = 0.65;
         if(Player.dash>0){
           this.survivedFinal=true; this.finalRugOutcome="dashed";
-          Parts.spawn(r.x,r.y,60,{c:"#FC8400",smin:150,smax:700,rmin:2,rmax:6,spark:true});
-          Rings.spawn(r.x,r.y,{r0:r.r*0.5,max:r.r*6,dur:0.6,c:"#FC8400",w:6});
+          Parts.spawn(r.x,r.y,60,{c:"#FFA800",smin:150,smax:700,rmin:2,rmax:6,spark:true});
+          Rings.spawn(r.x,r.y,{r0:r.r*0.5,max:r.r*6,dur:0.6,c:"#FFA800",w:6});
           this.hitstop = CFG.HITSTOP_FINAL;
           FX.kick(34); FX.invertHit(1);
           SFX.win(); Haptics.finalWin();
@@ -692,7 +692,7 @@ function drawPost(){
   if(FX.chroma>0.02){
     ctx.globalCompositeOperation="screen";
     ctx.globalAlpha = FX.chroma*0.10;
-    ctx.fillStyle="#FC8400"; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#FFA800"; ctx.fillRect(0,0,W,H);
     ctx.globalAlpha=1; ctx.globalCompositeOperation="source-over";
   }
 

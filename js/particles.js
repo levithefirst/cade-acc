@@ -88,7 +88,7 @@ export const Rings = {
   spawn(x,y,opt={}){
     const r = this.pool.find(q=>!q.on); if(!r) return;
     r.on=true; r.x=x; r.y=y; r.r=opt.r0||4; r.max=opt.max||90;
-    r.dur=opt.dur||0.4; r.life=r.dur; r.c=opt.c||"#FC8400"; r.w=opt.w||3;
+    r.dur=opt.dur||0.4; r.life=r.dur; r.c=opt.c||"#FFA800"; r.w=opt.w||3;
   },
   update(dt){ for(const r of this.pool){ if(!r.on)continue; r.life-=dt; if(r.life<=0){r.on=false;continue;} } },
   draw(){
@@ -117,7 +117,7 @@ export const Floaters = {
       if(!f.on) continue;
       const t=f.life/f.max;
       ctx.globalAlpha = t;
-      ctx.font = `900 ${f.size}px ${"Arial Black, Impact, sans-serif"}`;
+      ctx.font = `900 ${f.size}px ${"Bungee, Arial Black, Impact, sans-serif"}`;
       ctx.fillStyle = f.c;
       ctx.fillText(f.txt, f.x, f.y);
     }
@@ -163,7 +163,7 @@ export const Ambient = {
       ctx.translate(p.x,p.y); ctx.rotate(p.rot);
       if(p.type==="pump"){
         ctx.fillStyle="#3DC96B";
-        ctx.beginPath(); ctx.arc(0,0,p.r,0,TAU); ctx.fill();
+        ctx.fillRect(-p.r*0.32, -p.r*0.9, p.r*0.64, p.r*1.8);
       } else {
         ctx.fillStyle="#FF2A2A";
         ctx.fillRect(-p.r, -p.r*0.34, p.r*2, p.r*0.68);

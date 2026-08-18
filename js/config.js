@@ -45,7 +45,7 @@ export const CFG = {
   MULTI_DECAY:      0.30,   // per second
   MULTI_HIT_KEEP:   0.25,   // fraction kept on hit (hard reset)
 
-  PUMP_R:           11,
+  PUMP_R:           16,
   PUMP_BASE:        30,
   BIG_PUMP_MULTI:   5,
   BIG_PUMP_MULT:    1.6,
@@ -113,11 +113,14 @@ export const RANKS = [
 export const RUG_TYPES = {
   // speeds calibrated via simulation (0.86x of the original punishing curve)
   // — rugs are kept as SECONDARY hazards in CADE OPS per the brief.
-  DUMP:        {r:38, speed:[95,142],  col:"#FF2A2A", label:"DUMP",  w:2.3, h:0.7},
-  WICK:        {r:9,  speed:[361,482], col:"#FF5A5A", label:"WICK",  w:0.35,h:3.4},
-  LIQUIDATION: {r:17, speed:[129,163], col:"#FF3D6E", label:"LIQ",   w:1,   h:1},
-  FAKEOUT:     {r:21, speed:[163,206], col:"#C42BFF", label:"FAKE",  w:1.2, h:1.2},
-  WHALE:       {r:66, speed:[45,62],   col:"#8A1020", label:"WHALE", w:1.6, h:1.1}
+  // trailFX: the per-archetype secondary motion cue every synthesis
+  // response asked for — read the threat TYPE from color/motion alone,
+  // not just shape/speed, even in high density
+  DUMP:        {r:38, speed:[95,142],  col:"#FF2A2A", label:"DUMP",  w:2.3, h:0.7, trailFX:"ember"},
+  WICK:        {r:9,  speed:[361,482], col:"#FF5A5A", label:"WICK",  w:0.35,h:3.4, trailFX:"jagged"},
+  LIQUIDATION: {r:17, speed:[129,163], col:"#FF3D6E", label:"LIQ",   w:1,   h:1,   trailFX:"lockring"},
+  FAKEOUT:     {r:21, speed:[163,206], col:"#C42BFF", label:"FAKE",  w:1.2, h:1.2, trailFX:"breathe"},
+  WHALE:       {r:66, speed:[45,62],   col:"#8A1020", label:"WHALE", w:1.6, h:1.1, trailFX:"vortex"}
 };
 
 /* ============================================================
