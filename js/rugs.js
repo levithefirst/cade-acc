@@ -92,6 +92,26 @@ export const Rugs = {
 
       r.x += r.vx*dt; r.y += r.vy*dt;
 
+      // per-archetype trail particles — throttled so a screen full of
+      // rugs doesn't spam the particle pool. Each archetype's trail
+      // reads as its own signature even before you consciously notice shape.
+      r.fxTimer = (r.fxTimer||0) - dt;
+      if(r.fxTimer<=0){
+        if(r.type==="DUMP"){
+          r.fxTimer = 0.09;
+          Parts.spawn(r.x,r.y,1,{c:shadeColor(r.T.col,-0.1),smin:8,smax:26,lmin:.35,lmax:.6,rmin:1.5,rmax:2.6});
+        } else if(r.type==="WICK"){
+          r.fxTimer = 0.045;
+          Parts.spawn(r.x,r.y,1,{c:"#FFD23C",smin:20,smax:60,lmin:.12,lmax:.22,rmin:0.8,rmax:1.4,spark:true});
+        } else if(r.type==="WHALE"){
+          r.fxTimer = 0.14;
+          const a = rnd(0,TAU), d = r.r*rnd(1.6,2.8);
+          Parts.spawn(r.x+Math.cos(a)*d, r.y+Math.sin(a)*d, 1, {
+            c:"#8A1020", smin:0, smax:0, lmin:.4, lmax:.6, rmin:1.2, rmax:2
+          });
+        }
+      }
+
       // cull offscreen
       const m = r.r + 120*S;
       if(r.x<-m||r.x>W+m||r.y<-m||r.y>H+m){ r.on=false; }
@@ -118,8 +138,20 @@ export const Rugs = {
       ctx.translate(r.x,r.y);
       ctx.rotate(r.type==="WICK"||r.type==="DUMP" ? Math.atan2(r.vy,r.vx) : r.rot);
 
-      // charge / snap warning glow
-      if((r.type==="LIQUIDATION"&&r.phase===0) || (r.type==="FAKEOUT"&&r.phase===1)){
+      // charge / snap warning — each reads as a genuinely different signal
+      if(r.type==="LIQUIDATION" && r.phase===0){
+        // contracting ring — visibly closes in as r.timer approaches the
+        // 1.15s charge threshold (see update()), a real "lock-on" read
+        const closeness = clamp(r.timer/1.15, 0, 1);
+        const ringR = lerp(r.r*3.4, r.r*1.5, closeness);
+        ctx.strokeStyle = T.col;
+        ctx.lineWidth = (1.5+closeness*2.5)*S;
+        ctx.globalAlpha = 0.35+closeness*0.5;
+        ctx.beginPath(); ctx.arc(0,0,ringR,0,TAU); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      if(r.type==="FAKEOUT" && r.phase===1){
+        // soft breathing fill — a held-breath feel, distinct from LIQUIDATION's hard ring
         ctx.globalAlpha = 0.28+Math.sin(r.age*22)*0.2;
         ctx.fillStyle = T.col;
         ctx.beginPath(); ctx.arc(0,0,r.r*2.3,0,TAU); ctx.fill();
