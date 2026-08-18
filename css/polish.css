@@ -1,0 +1,160 @@
+/* CADE OPS — polish pass
+   Presentation overrides only. Gameplay layout remains owned by style.css. */
+:root{
+  --polish-ivory:#f6f2e8;
+  --polish-paper:#fffdf8;
+  --polish-ink:#101010;
+  --polish-muted:#625f57;
+  --polish-line:rgba(16,16,16,.14);
+  --polish-yellow:#ffb000;
+  --polish-orange:#f47b20;
+  --polish-red:#ff3b30;
+  --polish-dark:#111214;
+  --polish-dark2:#191a1e;
+}
+
+/* ---------- title ---------- */
+[data-theme="light"] #scTitle,
+[data-theme="light"] #scHowToPlay,
+[data-theme="light"] #scLeaderboard{
+  background:
+    radial-gradient(circle at 50% 12%,rgba(255,176,0,.15),transparent 30%),
+    linear-gradient(180deg,var(--polish-paper) 0%,var(--polish-ivory) 100%);
+  color:var(--polish-ink);
+}
+[data-theme="light"] #scTitle .tagline,
+[data-theme="light"] #scTitle .tagline-sharp,
+[data-theme="light"] #scTitle .eyebrow,
+[data-theme="light"] #scTitle .hs,
+[data-theme="light"] #scTitle .ranksub{color:var(--polish-muted)}
+[data-theme="light"] #scTitle .wordmark .a{color:var(--polish-ink)}
+[data-theme="light"] #scTitle .wordmark .b{
+  background:linear-gradient(180deg,#ffbe24,#e87516);
+  -webkit-background-clip:text;background-clip:text;
+}
+[data-theme="light"] #scTitle .wordmark .b::before{color:#f39a18;opacity:.16;filter:blur(24px)}
+[data-theme="light"] #scTitle .spotlight-beam{
+  background:linear-gradient(180deg,rgba(255,176,0,.13),rgba(255,176,0,.025) 55%,transparent 86%);
+}
+#scTitle{gap:11px;padding-top:max(28px,env(safe-area-inset-top));}
+#scTitle .brandmark-title{width:min(92vw,520px);height:34px;opacity:.78}
+#scTitle .tagline:first-of-type{font-family:var(--mono);font-size:10px;letter-spacing:.25em;font-weight:800}
+#scTitle .wordmark{font-size:clamp(60px,12.8vw,128px);line-height:.79;margin-top:1px}
+#scTitle .tagline-sharp{font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+#roster-showcase{
+  width:min(92vw,700px);height:clamp(150px,23vh,210px);margin:5px 0 0;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.12));
+}
+#scTitle .btn:not(.ghost){min-width:min(76vw,300px);padding:15px 32px;box-shadow:0 14px 28px rgba(242,137,22,.22)}
+[data-theme="light"] #scTitle .btn.ghost{
+  background:rgba(255,255,255,.72);color:#3f3c36;border-color:var(--polish-line);box-shadow:0 5px 14px rgba(20,16,8,.08)
+}
+#scTitle>.row{gap:7px;flex-wrap:wrap;max-width:760px}
+#scTitle>.row .hs{font-family:var(--mono);font-weight:800;font-size:10px;letter-spacing:.12em}
+#scTitle .theme-toggle{min-width:42px;padding:10px 13px}
+#scTitle #btnLeaderboard{padding-left:17px;padding-right:17px}
+@media(max-width:620px){
+  #scTitle{gap:8px;padding-left:14px;padding-right:14px}
+  #scTitle .wordmark{font-size:clamp(54px,17vw,92px)}
+  #roster-showcase{height:158px}
+  #scTitle>.row{max-width:340px}
+  #scTitle>.row .hs{width:100%;order:-1}
+}
+@media(min-width:900px){
+  #scTitle{padding-top:34px;gap:13px}
+  #roster-showcase{height:220px}
+}
+
+/* ---------- general light-mode cleanup ---------- */
+[data-theme="light"] .screen .rules,
+[data-theme="light"] .screen .stat,
+[data-theme="light"] .screen .lb-list,
+[data-theme="light"] .screen .tweetbox,
+[data-theme="light"] .screen .name-input{
+  background:rgba(255,255,255,.78);
+  color:var(--polish-ink);
+  border-color:var(--polish-line);
+  box-shadow:0 8px 24px rgba(35,28,14,.08),inset 0 1px 0 rgba(255,255,255,.8);
+}
+[data-theme="light"] .screen .rank,
+[data-theme="light"] .screen .rules,
+[data-theme="light"] .screen .stat .v,
+[data-theme="light"] .screen .lb-list{color:var(--polish-ink)}
+[data-theme="light"] .screen .ranksub,
+[data-theme="light"] .screen .scorelabel,
+[data-theme="light"] .screen .stat .k{color:var(--polish-muted)}
+
+/* ---------- results: a real end-of-run surface ---------- */
+#scEnd{
+  justify-content:flex-start;
+  gap:10px;
+  padding:clamp(20px,4vh,42px) 18px max(24px,env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 50% 8%,rgba(255,176,0,.12),transparent 28%),
+    linear-gradient(180deg,#141518 0%,#0d0e10 100%);
+  color:#fff;
+}
+#scEnd::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:4px;
+  background:linear-gradient(90deg,#ff3b30 0%,#ffb000 48%,#f47b20 100%);
+  box-shadow:0 0 22px rgba(255,176,0,.25);
+}
+#scEnd .brandmark-end{height:30px;width:min(88vw,460px);opacity:.72}
+#scEnd .eyebrow{color:#ffb000;opacity:1;font-size:9px}
+#scEnd .verdict{margin-top:2px;color:#ff3b30;text-shadow:0 0 22px rgba(255,59,48,.24);font-size:clamp(18px,4vw,25px)}
+#scEnd .verdict::before{border-color:rgba(255,59,48,.35);background:rgba(255,59,48,.045)}
+#scEnd .scorelabel{color:rgba(255,255,255,.48);font-family:var(--mono);font-weight:800;letter-spacing:.28em}
+#scEnd .bigscore{
+  font-size:clamp(74px,18vw,154px);
+  background:linear-gradient(180deg,#fff7d6 0%,#ffb000 68%,#f47b20 100%);
+  -webkit-background-clip:text;background-clip:text;
+}
+#scEnd .bigscore::before{color:#ff9f00;opacity:.22}
+#scEnd .rank{font-size:clamp(20px,4.6vw,32px);color:#fff}
+#scEnd .ranksub{color:rgba(255,255,255,.6)}
+#scEnd .stats{gap:7px;max-width:560px}
+#scEnd .stat{
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);
+  border-top-color:rgba(255,255,255,.17);box-shadow:0 8px 20px rgba(0,0,0,.22);border-radius:14px;
+}
+#scEnd .stat .k{color:rgba(255,255,255,.45)}
+#scEnd .stat .v{color:#fff}
+#scEnd .hs{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.55)}
+#scEnd .name-group-results{width:min(100%,430px)}
+#scEnd .name-input{
+  width:100%;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;padding:12px 14px;font-family:var(--mono);font-weight:700;outline:none;
+}
+#scEnd .name-input:focus{border-color:#ffb000;box-shadow:0 0 0 3px rgba(255,176,0,.12)}
+#scEnd .name-hint{color:rgba(255,255,255,.42);font-size:10px;margin-top:4px}
+#scEnd .tweetbox{max-width:560px;width:100%;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72)}
+#scEnd .btn:not(.ghost){box-shadow:0 12px 26px rgba(255,168,0,.16)}
+#scEnd .btn.x-share{background:#fff;color:#111;border-color:#fff;box-shadow:0 10px 22px rgba(0,0,0,.2)}
+#scEnd .btn.ghost{background:rgba(255,255,255,.055);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.10)}
+#scEnd .btn.ghost:hover{background:rgba(255,255,255,.1);color:#fff}
+#scEnd>.row{gap:8px;flex-wrap:wrap}
+@media(max-height:760px){#scEnd{gap:6px;padding-top:14px}#scEnd .brandmark-end{height:22px}#scEnd .bigscore{font-size:clamp(62px,16vw,116px)}}
+
+[data-theme="light"] #scEnd{background:linear-gradient(180deg,#151619 0%,#0c0d0f 100%);color:#fff}
+
+/* ---------- how-to-play ---------- */
+[data-theme="light"] #scHowToPlay{background:linear-gradient(180deg,#fffdf8,#f2ede1)}
+#scHowToPlay .rules{max-width:620px;line-height:1.8}
+#scHowToPlay .rank{font-size:clamp(24px,5vw,38px)}
+
+/* ---------- nerf roster ---------- */
+#scNerfs{background:linear-gradient(180deg,#101114,#0b0c0e)}
+#scNerfs .nerfs-heading{font-size:clamp(25px,5.6vw,40px);letter-spacing:.02em}
+#scNerfs .nerfs-subtitle{text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:rgba(255,255,255,.48)}
+#scNerfs .nerfs-grid{gap:12px}
+#scNerfs .nerf-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));border-color:rgba(255,255,255,.10);box-shadow:0 18px 38px rgba(0,0,0,.30)}
+#scNerfs .nerf-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 55%,rgba(255,255,255,.12))}
+#scNerfs .nerf-portrait{background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--accent) 18%,transparent),rgba(0,0,0,.20) 72%)}
+
+/* avoid the original CSS shimmer typo producing invalid animation timing */
+.btn::after{animation-duration:5s}
+
+@media(prefers-reduced-motion:reduce){
+  .btn::after{animation:none}
+  #scTitle .spotlight-beam{opacity:.5}
+}
