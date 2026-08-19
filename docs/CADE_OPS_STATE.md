@@ -1,84 +1,65 @@
 # CADE OPS State
 
-Documentation-only project memory. This file is never imported, bundled, or referenced by runtime code. Source files remain the runtime source of truth.
+Documentation-only project memory. This file is never imported or bundled. Runtime source remains the code in `js/`, `css/`, `index.html`, and `assets/`.
 
 ## Architecture
-- Static HTML + ES modules. `index.html` is the entry point.
-- Runtime JavaScript lives in `js/`; shared CSS lives in `css/`; runtime media lives in `assets/`.
-- Vercel serves the repository as a static site.
-
-## Gameplay systems
-- `js/main.js` owns the central game state and animation loop.
-- `js/player.js`, `js/rugs.js`, `js/pumps.js`, and `js/teams.js` own player/hazard/team behavior.
-- `js/ui.js` owns canvas/DOM presentation and title showcase painting.
-- This rendering repair does not change movement, dash, combat, AI, scoring, timer, health, burst mechanics, leaderboard identity, or audio.
+- Static HTML + ES modules. No framework and no router library.
+- `js/main.js` owns the central game state, canvas, simulation loop, input, and theme.
+- `js/ui.js` owns HUD drawing, screen switching, results flow, and title presentation.
+- `js/teams.js` owns the six in-game team identities and their gameplay silhouettes.
+- `js/combat-ai.js` owns the six combat profiles and projectile behavior.
+- `js/nerfs-page.js` owns the NERFS page roster records, individual portrait cards, carousel, and page-specific styling.
+- `js/ux-improvements.js` adds the small navigation/history layer, character dossier, Home→NERFS access, game-over leaderboard access, and gameplay pause UI without introducing a router or duplicate roster.
+- `js/burst.js` imports the UX layer and explicitly freezes its own animation state while `Game.paused` is true.
 
 ## Screen system
-- Screens are DOM containers in `index.html`, switched by the existing UI state/navigation helpers.
-- `#scTitle` is the landing screen; `#cv` is the gameplay canvas; `#scNerfs` is the NERFS page.
-- Identity, leaderboard, sound, and theme controls remain in their existing modules.
+- Screens are DOM containers in `index.html`, switched through the existing `show()` helper in `js/ui.js`.
+- `#scTitle` is Home, `#scHowToPlay` is the onboarding screen, `#scNerfs` is the six-character carousel, `#scLeaderboard` is the existing leaderboard, and `#scEnd` is the results screen.
+- `js/ux-improvements.js` observes the existing screen classes and keeps a small contextual history stack. Back therefore returns to the screen that actually opened NERFS or the leaderboard instead of assuming Home.
+- Home remains a root screen with no Back control.
 
-## Rendering pipeline
-- `#cv` is the gameplay canvas.
-- `#roster-showcase` is a separate decorative title canvas.
-- `paintRosterShowcase()` (in `js/ui.js`) measures the title canvas and draws the existing `TEAM_ROSTER` composition.
-- A hidden title screen cannot provide reliable canvas dimensions (it starts behind the identity gate). The single authoritative repaint path now lives in `js/main.js`'s boot sequence (`initRosterShowcaseLifecycle`, immediately before `requestAnimationFrame(frame)`): it treats `#scTitle` gaining the `"on"` class as the paint-lifecycle boundary, repaints on the next animation frame, observes title class mutations (covers the identity→title transition and any later back-navigation), and repaints on resize/orientation. It deliberately does not swallow renderer exceptions.
-- `js/visual-fix.js` was a temporary runtime patch that duplicated this exact logic and was only reachable because `js/nerfs-page.js` imported it as a side effect (an unrelated, confusing coupling — the NERFS module has nothing to do with title rendering). Its behavior was merged into `js/main.js`'s real boot sequence and the file was deleted. There is now exactly one repaint path for the showcase; do not add a second one.
+## Character assets and NERFS page
+- The NERFS page uses six separate local portrait files under `assets/nerfs/`.
+- Current portrait files are `steve.jpg`, `gnar.jpg`, `kosgood.jpg`, `scotty.jpg`, `rookmate.jpg`, and `poppunk.jpg`.
+- `js/nerfs-page.js` remains the single source for the NERFS page's handle, weapon, accent, and portrait path records.
+- The character dossier does not create another character roster. It reads the rendered NERFS card for handle, weapon, accent, and image, then joins that existing identity with the authoritative `TEAM_ROSTER` and `COMBAT` records for personality and combat type/profile.
+- The dossier is a native modal `<dialog>` with previous/next controls, mobile swipe, keyboard arrows, Escape, focus restoration, and reduced-motion handling.
+- No RPG levels, XP, rarity, inventory, equipment, or invented stats are used.
 
-## Asset system
-- Runtime images are served from `assets/` using repository-relative production paths.
-- `assets/nerfs-sprite.jpg` is the six-frame NERFS portrait sprite, expected to be 768x128 with six 128x128 frames in roster order.
-- The current repaired sprite was decoded and validated before being committed.
+## Gameplay pause
+- `Game.paused` is the authoritative pause flag added by `js/ux-improvements.js` around the existing `Game.update()` entry point.
+- While paused, the existing simulation update is not called. This freezes the timer, player, teams, rugs, pumps, collisions, projectiles, multiplier decay, dash/burst state, gameplay particles, and other simulation-dependent updates.
+- `js/burst.js` also checks `Game.paused` before advancing its own charge-lock/pulse animation frame so Burst state cannot continue changing behind the pause overlay.
+- The arena remains rendered behind a dark scrim. The pause UI contains Resume, Restart, and Exit to Home.
+- Escape pauses during play and resumes while paused. The pause control is separated from the bottom combat controls.
 
-## NERFS page
-- `js/nerfs-page.js` supplies the six roster records, markup, sprite positioning, interaction, and existing component styling.
-- The portrait source is `/assets/nerfs-sprite.jpg`; no remote avatar source is used.
-- NERFS card layout remains the existing 3 x 2 desktop composition with responsive mobile behavior.
-- `css/polish.css` contains the established page-level NERFS layout rules; `js/nerfs-page.js` retains its component-specific style injection because the current implementation depends on it. No visual redesign was introduced by this repair.
+## Navigation additions
+- Home has a compact `Nerfs` button alongside the existing leaderboard control.
+- NERFS retains its existing horizontal carousel and Back/Let's Cade controls.
+- The active NERFS card opens the character dossier. Its active state remains selected when the dossier closes.
+- Game Over keeps Run It Back as the primary action and now gets Leaderboard + Home as a compact secondary navigation row.
+- Existing leaderboard functionality and backend remain unchanged.
 
-## Theme system
-- `Theme` in `js/main.js` remains authoritative for dark/light rendering.
-- CADE palette: `#2F2F2F`, `#FFB514`, `#141414`, `#FFA800`, `#FFFFFF`.
-- The title canvas is intentionally transparent; correct rendering depends on painting after the title screen has a measurable layout.
+## Accessibility and responsive behavior
+- New utility controls use approximately 48px touch targets.
+- Dossier cards expose the active character as a keyboard control. Enter/Space opens it; left/right changes characters; Escape closes it; focus returns to the triggering card.
+- Native `<dialog>` provides modal inertness and baseline focus behavior.
+- Pause uses a contained keyboard focus cycle, visible focus styles, and touch-friendly controls.
+- Dossier and pause transitions respect `prefers-reduced-motion`.
+- Dossier layout gives the artwork the dominant share of the viewport on desktop and mobile, with a compact information panel rather than RPG-style stat screens.
 
-## Important design contracts
-- Fix rendering lifecycle failures at the source instead of hiding them with CSS.
-- Never rely on a hidden screen's zero-sized layout for canvas backing resolution.
-- NERFS image assets must be valid and decodable in production.
-- Decorative title rendering remains separate from gameplay rendering.
-- This document has no runtime role.
+## Rendering and asset contracts
+- `#cv` remains the gameplay canvas.
+- `#roster-showcase` remains the decorative title canvas and its lifecycle remains owned by `js/main.js`.
+- Runtime NERFS images are local repository assets. No remote avatar source or image-generation pipeline is required by the current architecture.
+- Do not reintroduce the obsolete six-frame sprite-sheet architecture into the NERFS page.
 
-## Known issues
-- **FIXED — landing showcase gold/blank rectangle.** Root cause: the initial showcase paint could occur before the title screen had a measurable layout (it opens behind an identity gate). Verified locally with a headless-Chromium harness: forcing `#scTitle` to `"on"` and reading the canvas's `ImageData` back shows real painted content (tens of thousands of non-transparent pixels, not zero), repeatably, across desktop and mobile viewports and both themes, with zero page/console errors from the renderer. Not a `roundRect` compatibility issue — `TEAM_ROSTER` draw functions use native `CanvasRenderingContext2D.roundRect`, which the test browser (a current Chromium build) supports without error; this was not changed, since the actual failure was the timing race, not API support.
-- **FIXED — competing repaint paths.** `js/visual-fix.js` (a runtime patch, only ever loaded as a side effect of importing `js/nerfs-page.js`) and `js/main.js`'s own direct `paintRosterShowcase()` boot call + resize/orientation listeners were two independent repaint systems for the same canvas. Consolidated into the single lifecycle owner in `js/main.js` (see Rendering pipeline); `js/visual-fix.js` deleted after confirming (via repo-wide grep) nothing else imported it.
-- **FIXED — NERFS blank portraits.** `assets/nerfs-sprite.jpg` is a valid baseline JPEG, confirmed by parsing its SOF0 marker directly (768x128, 8-bit, 3 components, terminated by a proper EOI marker) and by loading it in a real browser, where all six `<img>` elements report `complete:true, naturalWidth:768, naturalHeight:128`. The committed git blob hash matches the working-tree file exactly (no CRLF/LFS corruption risk — no `.gitattributes` present). The `?v=2` cache-busting query string was left in place; it is harmless and removing it was not necessary to fix anything.
-- **NOT VERIFIED IN PRODUCTION.** This environment's network egress to `cadeops.vercel.app` is blocked by policy (confirmed via both `curl`, which got a proxy-level 403 on CONNECT, and the `WebFetch` tool, which reported `EGRESS_BLOCKED`) — production could not be reached at all from this session. Everything above is VERIFIED LOCALLY only: a plain `python3 -m http.server` serving the repository root, driven by headless Chromium (Playwright), asserting on actual pixel data and real DOM/network state rather than assumptions. Since this repo has no build step (`vercel.json`/`package.json` absent — Vercel serves it as a static site with auto-detected `/api` functions), what's committed to `main` is what ships; local verification against the raw files is a reasonably strong proxy but is not the same as hitting the live URL. Whoever can reach `https://cadeops.vercel.app` should do a final pass: load `/`, `/assets/nerfs-sprite.jpg`, and the NERFS page, and confirm no console errors.
-- **MONITORING — NERFS CSS ownership.** `css/polish.css` (page-level layout) and `js/nerfs-page.js`'s injected `<style>` (component-specific rules) both style `#scNerfs`. They are currently non-destructive to the image pipeline. No consolidation was done — out of scope for this repair pass, and the existing split is functioning correctly.
+## Gameplay contracts
+- Preserve the 60-second run, six lives, dash, Burst, pumps, rugs, multiplier, scoring, combat AI, projectiles, leaderboard backend, identity system, sound system, and theme system.
+- Pause must gate the existing update loop rather than hiding the canvas while simulation continues.
+- The six identities, handles, weapons, and combat behavior remain unchanged.
 
-## Failed fixes
-- CSS-only patches to the title screen did not address the hidden-canvas measurement race.
-- Styling changes to the NERFS portrait container could not repair an invalid/truncated image asset.
-- Silent `try/catch` repaint logic obscured renderer failures and must not be reintroduced.
-
-## Major decisions
-- Keep the existing canvas renderer and screen architecture.
-- Use the existing local sprite asset rather than remote or generated avatars.
-- Use title visibility and animation-frame timing as the showcase paint contract.
-- Own that paint contract from exactly one place (`js/main.js`'s boot sequence) rather than a separate always-loaded patch module.
-- Keep gameplay systems outside the rendering repair boundary.
-
-## Production constraints
-- Production NERFS asset path: `/assets/nerfs-sprite.jpg`.
-- Static site deployment; no framework-specific image pipeline is involved.
-- Documentation must never be imported or bundled.
-
-## Change history
-- 2026-08-19 — rendering repair (prior session) — corrected title showcase lifecycle and restored a valid six-frame NERFS portrait asset without changing gameplay.
-- 2026-08-19 — diagnostic + repair pass — re-verified both prior fixes hold with a real headless-browser test (pixel-level assertions, not assumptions); found and fixed a genuine remaining issue (two competing repaint systems for the same canvas — `js/visual-fix.js` vs. `js/main.js`'s direct calls); consolidated to one authoritative repaint path and deleted `js/visual-fix.js`; confirmed no gameplay/scoring/difficulty/control files were touched.
-
-## Current verified state
-- Last verified commit: see this commit's parent in `git log` (this doc is updated in the same commit as the fix, so `git log -1 -- docs/CADE_OPS_STATE.md` on `main` names it).
-- Last verified date: 2026-08-19.
-- Current production status: not directly checked this pass (egress blocked in this environment); local verification via headless Chromium against the exact committed files shows no rendering/console errors and correct pixel output on the roster showcase, correct sprite decoding for the NERFS page, and clean syntax across every file in `js/` and `api/`.
-- Open issues: none known in the rendering/asset paths covered by this pass. NERFS CSS ownership remains split across two files (monitored, not broken). Production has not been re-checked against this exact commit by this session.
-- Files requiring caution: `js/main.js` (now owns the title showcase repaint lifecycle — do not add a second repaint path), `js/ui.js`, `js/nerfs-page.js`, `css/polish.css`, `assets/nerfs-sprite.jpg`.
+## Verification notes
+- The repository is a static site with no package/build step in the current tree.
+- The implementation should be validated against the actual page at phone and desktop viewport sizes, with mouse, keyboard, touch, and reduced-motion settings.
+- Production access was not assumed during this implementation. Final browser verification should use the deployed page when network access is available.
