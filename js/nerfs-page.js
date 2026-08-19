@@ -20,7 +20,7 @@ function injectStyles(){
   const style=document.createElement("style");
   style.id="cade-nerfs-roster-style";
   style.textContent=`
-#scNerfs{background:#101114;justify-content:flex-start;gap:8px;padding:clamp(22px,4vh,38px) max(14px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));overflow-x:hidden;overflow-y:auto}
+#scNerfs{min-height:100svh;height:100dvh;box-sizing:border-box;background:#101114;justify-content:safe center;gap:8px;padding:clamp(22px,4vh,38px) max(14px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));overflow-x:hidden;overflow-y:auto}
 #scNerfs .nerfs-heading{font-size:clamp(30px,5vw,48px)}
 #scNerfs .nerfs-subtitle{text-transform:uppercase;letter-spacing:.16em;font-size:9px;color:rgba(255,255,255,.48)}
 #scNerfs .nerfs-grid{width:min(100%,1380px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:8px auto 4px}
@@ -42,8 +42,15 @@ function injectStyles(){
 #scNerfs .nerf-label{position:relative;z-index:3;padding:0 14px 12px;font:800 7px/1 var(--mono);letter-spacing:.16em;color:rgba(255,255,255,.34)}
 #scNerfs .nerfs-actions{width:min(100%,1380px);justify-content:center;gap:8px;margin:4px auto 0}
 @media(min-width:1200px){#scNerfs .nerfs-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}#scNerfs .nerf-card{min-height:360px;grid-template-rows:minmax(230px,1fr) auto auto}#scNerfs .nerf-portrait{min-height:230px}#scNerfs .nerf-meta{display:block;padding:12px 12px 9px}#scNerfs .nerf-weapon{display:inline-flex;margin-top:9px}#scNerfs .nerf-x{position:absolute;right:10px;bottom:38px}#scNerfs .nerf-label{padding:0 12px 11px}}
-@media(max-width:760px){#scNerfs{padding-left:12px;padding-right:12px}#scNerfs .nerfs-grid{width:100%;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding:5px 3px 14px;margin-left:0;margin-right:0;scrollbar-width:none}#scNerfs .nerfs-grid::-webkit-scrollbar{display:none}#scNerfs .nerf-card{flex:0 0 min(82vw,330px);min-height:300px;scroll-snap-align:center;scroll-snap-stop:always}#scNerfs .nerf-portrait{min-height:205px}#scNerfs .nerf-name{font-size:21px}#scNerfs .nerf-x{width:34px;height:34px;flex-basis:34px}}
-@media(max-width:430px){#scNerfs .nerf-card{flex-basis:84vw;min-height:285px}#scNerfs .nerf-portrait{min-height:190px}#scNerfs .nerf-name{font-size:19px}}
+@media(max-width:760px){#scNerfs{padding-left:12px;padding-right:12px}#scNerfs .nerfs-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px auto 4px}#scNerfs .nerf-card{min-height:225px;grid-template-rows:minmax(130px,1fr) auto auto}#scNerfs .nerf-portrait{min-height:130px}#scNerfs .nerf-name{font-size:15px}#scNerfs .nerf-handle{font-size:8px}#scNerfs .nerf-meta{padding:8px 10px 9px}#scNerfs .nerf-weapon{padding:5px 6px;font-size:6px}#scNerfs .nerf-x{width:28px;height:28px;flex-basis:28px}#scNerfs .nerf-label{padding:0 10px 9px;font-size:6px}}
+@media(max-width:430px){#scNerfs .nerf-card{min-height:210px}#scNerfs .nerf-portrait{min-height:118px}#scNerfs .nerf-name{font-size:14px}}
+@media(max-height:740px){#scNerfs{padding-top:14px;padding-bottom:14px;gap:5px}#scNerfs .nerfs-heading{font-size:clamp(24px,5vw,34px)}}
+#scNerfs .nerf-card:nth-child(1) .nerf-portrait img{animation-delay:0s}
+#scNerfs .nerf-card:nth-child(2) .nerf-portrait img{animation-delay:-.8s}
+#scNerfs .nerf-card:nth-child(3) .nerf-portrait img{animation-delay:-1.6s}
+#scNerfs .nerf-card:nth-child(4) .nerf-portrait img{animation-delay:-2.4s}
+#scNerfs .nerf-card:nth-child(5) .nerf-portrait img{animation-delay:-3.2s}
+#scNerfs .nerf-card:nth-child(6) .nerf-portrait img{animation-delay:-4s}
 @media(prefers-reduced-motion:reduce){#scNerfs .nerf-card{animation:none;transition:none;transform:none}#scNerfs .nerf-portrait img{animation:none}}
 @keyframes cadeNerfIn{from{opacity:0;transform:perspective(900px) translateY(16px) scale(.985)}to{opacity:1;transform:perspective(900px) translateY(0) scale(1)}}
 @keyframes cadeNerfFloat{0%,100%{transform:translateZ(0) scale(1.01) translateY(0)}50%{transform:translateZ(8px) scale(1.03) translateY(-5px)}}`;
