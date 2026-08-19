@@ -207,5 +207,26 @@ function frame(){
   requestAnimationFrame(frame);
 }
 
+function installPauseFocusTrap(){
+  const overlay = document.getElementById("pauseOverlay");
+  if(!overlay || overlay.dataset.focusTrapBound) return;
+  overlay.dataset.focusTrapBound = "1";
+  overlay.addEventListener("keydown", e => {
+    if(e.key !== "Tab") return;
+    const controls = [...overlay.querySelectorAll("button")].filter(b => !b.disabled && !b.hidden);
+    if(!controls.length) return;
+    const first = controls[0], last = controls[controls.length-1];
+    if(e.shiftKey && document.activeElement === first){
+      e.preventDefault();
+      last.focus();
+    }else if(!e.shiftKey && document.activeElement === last){
+      e.preventDefault();
+      first.focus();
+    }
+  });
+}
+
 setCharge(0);
 requestAnimationFrame(frame);
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", installPauseFocusTrap, {once:true});
+else requestAnimationFrame(installPauseFocusTrap);
