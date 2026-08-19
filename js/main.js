@@ -374,19 +374,14 @@ export const Game = {
   },
 
   spawnOne(){
-    const d = this.difficulty;
-    const bag = [];
-    bag.push("DUMP","DUMP","DUMP");
-    if(d>0.10) bag.push("WICK","WICK");
-    if(d>0.28) bag.push("LIQUIDATION","LIQUIDATION");
-    if(d>0.45) bag.push("FAKEOUT");
-    if(d>0.55 && Math.random()<0.35) bag.push("WHALE");
-    if(this.meltdown) bag.push("WICK","LIQUIDATION","FAKEOUT");
-    // per-run bias — only leans toward an archetype that's already
-    // legitimately unlocked at this difficulty, never forces one early
-    if(this.runBias && bag.includes(this.runBias)) bag.push(this.runBias, this.runBias);
-    const r = Rugs.spawn(pick(bag));
-    if(r) this.stats.spawned++;
+    // Rugs (the red hazard bars) are disabled per explicit request — they
+    // made the game too hard. This is the single point that gates both
+    // the regular difficulty-scaled spawn and the pre-final "INCOMING"
+    // burst, since both call spawnOne(). Team spawning (the actual NERF
+    // objectives) is untouched — it's driven separately in spawnLogic()
+    // below. The end-of-run "ONE MORE RUG" finale (launchFinalRug/scene
+    // "finalrug") is also a separate system and intentionally untouched.
+    // Full spawn logic is preserved in git history if this is reverted.
   },
 
   /* --- collision + graze --- */
