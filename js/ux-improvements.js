@@ -2,14 +2,13 @@
    Small DOM/UI layer around the existing screen and game systems.
    No router, framework, duplicate character roster, or gameplay rules.
 */
-import { Game, Input, Store, Theme } from "./main.js";
+import { Game, Input, Theme } from "./main.js";
 import { startRun, show, scTitle, scEnd, scLeaderboard, scHowToPlay, scNerfs } from "./ui.js";
 import { TEAM_ROSTER } from "./teams.js";
 import { COMBAT, shots } from "./combat-ai.js";
 import { Rugs } from "./rugs.js";
 import { Pumps } from "./pumps.js";
 import { Teams } from "./teams.js";
-import { Player } from "./player.js";
 import { FX, Parts, Rings, Floaters } from "./particles.js";
 import { SFX, Music } from "./audio.js";
 
@@ -27,8 +26,6 @@ let pauseOverlay = null;
 function visibleScreen(){
   return SCREEN_LIST.find(s => s?.classList.contains("on")) || null;
 }
-
-function screenId(screen){ return screen?.id || null; }
 
 function syncScreenHistory(){
   const next = visibleScreen();
@@ -445,17 +442,6 @@ function installGamePause(){
       moveDossier(e.key === "ArrowRight" ? 1 : -1);
     }
   }, true);
-
-  const originalFocus = pauseOverlay?.querySelector(".pause-resume");
-  if(originalFocus) originalFocus.addEventListener("keydown", e => {
-    if(e.key === "Tab" && !e.shiftKey){
-      const exit = pauseOverlay.querySelector("#pauseExit");
-      if(document.activeElement === exit){
-        e.preventDefault();
-        pauseOverlay.querySelector(".pause-resume")?.focus();
-      }
-    }
-  });
 }
 
 function injectStyles(){
