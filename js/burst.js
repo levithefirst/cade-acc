@@ -10,6 +10,7 @@ import { Rugs } from "./rugs.js";
 import { FX, Parts, Rings, Floaters } from "./particles.js";
 import { SFX, Haptics } from "./audio.js";
 import { shots } from "./combat-ai.js";
+import "./ux-improvements.js";
 
 const BURST = Object.freeze({
   PUMP_CHARGE: 1 / 3,
@@ -187,6 +188,10 @@ function drawBurstPulse(){
 }
 
 function frame(){
+  if(Game.paused){
+    requestAnimationFrame(frame);
+    return;
+  }
   if(burstLock>0) burstLock=Math.max(0,burstLock-1/60);
   if(pulse>0) pulse=Math.max(0,pulse-1/45);
 
