@@ -7,7 +7,7 @@
    ============================================================ */
 import { Store, Theme, Game } from "./main.js";
 import { SFX } from "./audio.js";
-import { show, scTitle, scLeaderboard, paintDomMark } from "./ui.js";
+import { show, scTitle, scLeaderboard, paintDomMark, goBack } from "./ui.js";
 
 const identityScreen = document.getElementById("scIdentity");
 const identityForm = document.getElementById("identityForm");
@@ -204,13 +204,15 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
-document.getElementById("btnLeaderboard")?.addEventListener("click", () => {
+function openLeaderboard(){
   SFX.ui();
   show(scLeaderboard);
   paintDomMark("markLeaderboard", 0.55, Theme.colors().cade, Theme.colors().bg);
   fetchLeaderboard();
-});
+}
+document.getElementById("btnLeaderboard")?.addEventListener("click", openLeaderboard);
+document.getElementById("btnEndLeaderboard")?.addEventListener("click", openLeaderboard);
 document.getElementById("btnLbBack")?.addEventListener("click", () => {
   SFX.ui();
-  show(scTitle);
+  goBack();
 });

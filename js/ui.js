@@ -11,7 +11,7 @@
    main.js that every other module does — see main.js's header.
    ============================================================ */
 import { CFG, RANKS, RUG_TYPES, shadeColor, clamp, pick, TAU } from "./config.js";
-import { ctx, W, H, S, DPR, Theme, Store, Input, lifeIconPos } from "./main.js";
+import { ctx, W, H, S, DPR, Theme, Store, Input, lifeIconPos, pausableNow } from "./main.js";
 import { Game } from "./main.js";
 import { Player } from "./player.js";
 import { Teams, TEAM_ROSTER } from "./teams.js";
@@ -84,7 +84,7 @@ export function drawTimer(){
 
   const tc = Theme.colors();
   const size = urgent ? 54*S : 40*S;
-  const bob  = urgent ? Math.sin(performance.now()/90)*2.5*S : 0;
+  const bob  = urgent ? Math.sin(pausableNow()/90)*2.5*S : 0;
   ctx.textAlign="center"; ctx.textBaseline="top";
   ctx.font = `900 ${size}px Bungee, Arial Black, Impact, sans-serif`;
   ctx.fillStyle = critical ? "#FF2A2A" : tc.cade;
@@ -173,7 +173,7 @@ export function drawHUD(){
     ctx.fillStyle = Theme.mode==="light" ? "rgba(20,15,5,.10)" : "rgba(255,255,255,.10)";
     roundRectPath(ctx, sx, ey0, segW, eH, 3*S); ctx.fill();
     if(fill>0){
-      const pulse = Game.boosted ? 0.7+Math.sin(performance.now()/110)*0.3 : 1;
+      const pulse = Game.boosted ? 0.7+Math.sin(pausableNow()/110)*0.3 : 1;
       ctx.fillStyle = tc.yellow;
       ctx.globalAlpha = pulse;
       if(Game.boosted){ ctx.shadowColor=tc.yellow; ctx.shadowBlur=10; }
@@ -189,7 +189,7 @@ export function drawHUD(){
   // multiplier (right)
   const m = Game.multi;
   const hot = clamp((m-1)/(CFG.MULTI_MAX-1),0,1);
-  const pulse = 1 + Math.sin(performance.now()/(160-hot*100))*0.05*hot;
+  const pulse = 1 + Math.sin(pausableNow()/(160-hot*100))*0.05*hot;
   ctx.textAlign="right";
   ctx.save();
   ctx.translate(W-18*S, 14*S);
@@ -304,13 +304,39 @@ export const dashBtn = document.getElementById("dashBtn");
 scTitle.classList.add("first-in");
 export const isTouchDevice = (window.matchMedia && matchMedia("(pointer:coarse)").matches) || "ontouchstart" in window;
 
-export function show(el){
+/* ============================================================
+   NAVIGATION HISTORY
+   A tiny back-stack layered onto the existing show()/screen system —
+   no router, no dependency. show(el) auto-pushes whichever screen was
+   active before the switch; goBack() pops it. Every "forward" nav call
+   (show(scX) from a button that takes you deeper) needs no change at
+   all — the stack records where you came from automatically. Only
+   "Back" buttons change, from a hardcoded show(scTitle) to goBack().
+   ============================================================ */
+const navStack = [];
+function activeScreen(){
+  return [scTitle,scEnd,scLeaderboard,scHowToPlay,scNerfs].find(s=>s && s.classList.contains("on")) || null;
+}
+export function show(el, opts={}){
+  if(!opts.replace && !opts.isBack && el){
+    const cur = activeScreen();
+    if(cur && cur!==el) navStack.push(cur);
+  }
   [scTitle,scEnd,scLeaderboard,scHowToPlay,scNerfs].forEach(s=>s && s.classList.remove("on"));
   if(el) el.classList.add("on");
   dashBtn.classList.remove("show");
 }
+export function goBack(fallback=scTitle){
+  const prev = navStack.pop() || fallback;
+  show(prev, {isBack:true});
+}
+export function goHome(){
+  navStack.length = 0;
+  show(scTitle, {replace:true});
+}
 
 export function startRun(){
+  navStack.length = 0;
   show(null);
   Game.reset();
   Game.scene="play";
@@ -328,6 +354,7 @@ export function startRun(){
 document.getElementById("btnStart").addEventListener("click", ()=>{ SFX.ui(); show(scHowToPlay); });
 document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); show(scNerfs); if(scNerfs) scNerfs.scrollTop=0; });
 document.getElementById("btnAgain")?.addEventListener("click", ()=>{ SFX.ui(); startRun(); });
+document.getElementById("btnEndHome")?.addEventListener("click", ()=>{ SFX.ui(); goHome(); });
 
 // dedicated touch dash button — more reliable than double-tap during
 // frantic drag movement, shown only on touch-capable devices (see

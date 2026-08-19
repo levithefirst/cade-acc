@@ -94,7 +94,7 @@ function killNearbyNerfs(){
 }
 
 export function activate(){
-  if(Game.scene !== "play" || Player.alive === false || burstLock > 0 || charge < 1) return false;
+  if(Game.scene !== "play" || Game.paused || Player.alive === false || burstLock > 0 || charge < 1) return false;
   setCharge(0);
   burstLock = BURST.COOLDOWN_LOCK;
   Game.stats.burstUses = (Game.stats.burstUses||0) + 1;
@@ -187,14 +187,13 @@ function drawBurstPulse(){
 }
 
 function frame(){
-  if(burstLock>0) burstLock=Math.max(0,burstLock-1/60);
-  if(pulse>0) pulse=Math.max(0,pulse-1/45);
-
   if(Game.scene !== "play"){
     if(shots.length) shots.length=0;
     burstHud.classList.remove("show","ready");
     if(burstBtn) burstBtn.classList.remove("show","ready");
-  }else{
+  }else if(!Game.paused){
+    if(burstLock>0) burstLock=Math.max(0,burstLock-1/60);
+    if(pulse>0) pulse=Math.max(0,pulse-1/45);
     burstHud.classList.add("show");
     setCharge(charge);
     drawBurstPulse();

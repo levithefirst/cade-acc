@@ -31,7 +31,7 @@
    land within nerf range) to disable them.
    ============================================================ */
 import { CFG, rnd, rint, lerp, clamp, TAU, shadeColor } from "./config.js";
-import { ctx, W, H, S, Theme } from "./main.js";
+import { ctx, W, H, S, Theme, pausableNow } from "./main.js";
 import { Game } from "./main.js";
 import { Player } from "./player.js";
 import { Pumps } from "./pumps.js";
@@ -381,7 +381,7 @@ export const Teams = {
       // exposed telegraph — a bright ring outside the character, pulsing
       // faster as the window is about to close, so "take it now" reads clearly
       if(t.exposed){
-        const pulse = 0.6+Math.sin(performance.now()/85)*0.4;
+        const pulse = 0.6+Math.sin(pausableNow()/85)*0.4;
         ctx.save();
         ctx.strokeStyle = tc.yellow; ctx.lineWidth = 2.2*S;
         ctx.globalAlpha = pulse;

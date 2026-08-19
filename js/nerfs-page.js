@@ -1,4 +1,6 @@
-import { startRun, show, scTitle } from "./ui.js";
+import { startRun, show, scTitle, goBack } from "./ui.js";
+import { COMBAT } from "./combat-ai.js";
+import { TEAM_ROSTER } from "./teams.js";
 
 const screen = document.getElementById("scNerfs");
 const grid = document.getElementById("nerfsGrid");
@@ -119,7 +121,52 @@ function injectStyles(){
 }
 @keyframes cadeNerfScan{0%{background-position-y:0}100%{background-position-y:120px}}
 @keyframes cadeNerfSweep{0%,68%{background-position:-60% -60%}82%{background-position:140% 140%}100%{background-position:140% 140%}}
-@keyframes cadeNerfNoiseFlicker{0%,100%{opacity:.045}50%{opacity:.09}}`;
+@keyframes cadeNerfNoiseFlicker{0%,100%{opacity:.045}50%{opacity:.09}}
+
+/* ===== CHARACTER DOSSIER ===== */
+.nerf-dossier{--accent:#FFA800;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:none;background:#101114;color:#fff;box-sizing:border-box}
+.nerf-dossier[open]{display:flex;align-items:center;justify-content:safe center}
+.nerf-dossier::backdrop{background:rgba(6,6,8,.86);backdrop-filter:blur(6px)}
+.nerf-dossier .dossier-inner{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.82fr);align-items:center;gap:clamp(24px,4vw,64px);width:min(92vw,1080px);max-height:100%;margin:0 auto;padding:clamp(20px,4vh,48px) clamp(20px,3vw,32px);box-sizing:border-box;overflow-y:auto}
+.nerf-dossier .dossier-portrait{position:relative;border-radius:20px;overflow:hidden;background:#141414;aspect-ratio:4/5;isolation:isolate;box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent);animation:dossierPortraitIn .5s cubic-bezier(.16,1,.3,1) both}
+.nerf-dossier .dossier-portrait img{width:100%;height:100%;object-fit:cover;object-position:center 12%;display:block}
+.nerf-dossier .dossier-glow{position:absolute;inset:-40% -30%;background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--accent) 38%,transparent),transparent 60%);pointer-events:none;z-index:2;opacity:.7;animation:dossierGlowPulse 5s ease-in-out infinite}
+.nerf-dossier .dossier-portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(16,17,20,.5) 100%);pointer-events:none;z-index:3}
+.nerf-dossier .dossier-info{position:relative;z-index:2;min-width:0;animation:dossierInfoIn .5s cubic-bezier(.16,1,.3,1) .08s both}
+.nerf-dossier .dossier-index{font:800 10px/1 var(--mono);letter-spacing:.24em;color:color-mix(in srgb,var(--accent) 80%,white);margin:0 0 10px}
+.nerf-dossier .dossier-name{margin:0;font:900 clamp(30px,5vw,52px)/1 var(--display);letter-spacing:.01em;color:#fff;text-transform:uppercase}
+.nerf-dossier .dossier-handle{margin-top:8px;font:800 12px/1 var(--mono);letter-spacing:.12em;color:rgba(255,255,255,.5);text-decoration:none;display:inline-block}
+.nerf-dossier .dossier-handle:hover,.nerf-dossier .dossier-handle:focus-visible{color:var(--accent)}
+.nerf-dossier .dossier-tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.nerf-dossier .dossier-tag{padding:8px 14px;border:1px solid color-mix(in srgb,var(--accent) 40%,rgba(255,255,255,.14));border-radius:999px;font:800 10px/1 var(--mono);letter-spacing:.14em;color:var(--accent);background:rgba(20,20,20,.55);text-transform:uppercase}
+.nerf-dossier .dossier-desc{margin:0 0 14px;font:500 15px/1.55 var(--mono);color:rgba(255,255,255,.72);max-width:52ch}
+.nerf-dossier .dossier-quip{margin:0;font:italic 700 13px/1.5 var(--mono);color:color-mix(in srgb,var(--accent) 75%,white);opacity:.85}
+.nerf-dossier .dossier-close,.nerf-dossier .dossier-nav{position:fixed;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(16,17,20,.72);backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s,border-color .18s,transform .18s;z-index:5;touch-action:manipulation}
+.nerf-dossier .dossier-close:hover,.nerf-dossier .dossier-nav:hover,.nerf-dossier .dossier-close:focus-visible,.nerf-dossier .dossier-nav:focus-visible{background:#FFA800;border-color:#FFA800;color:#141414;outline:none}
+.nerf-dossier .dossier-close:active,.nerf-dossier .dossier-nav:active{transform:scale(.92)}
+.nerf-dossier .dossier-close svg,.nerf-dossier .dossier-nav svg{width:20px;height:20px}
+.nerf-dossier .dossier-close{top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right))}
+.nerf-dossier .dossier-nav-prev{left:max(16px,env(safe-area-inset-left));top:50%;transform:translateY(-50%)}
+.nerf-dossier .dossier-nav-next{right:max(16px,env(safe-area-inset-right));top:50%;transform:translateY(-50%)}
+.nerf-dossier .dossier-nav-prev:active{transform:translateY(-50%) scale(.92)}
+.nerf-dossier .dossier-nav-next:active{transform:translateY(-50%) scale(.92)}
+.nerf-dossier .dossier-nav[disabled]{opacity:.25;pointer-events:none}
+@media(max-width:760px){
+.nerf-dossier .dossier-inner{grid-template-columns:1fr;grid-template-rows:auto auto;gap:20px;width:100%;padding:max(72px,calc(env(safe-area-inset-top) + 64px)) max(18px,env(safe-area-inset-left)) max(24px,env(safe-area-inset-bottom))}
+.nerf-dossier .dossier-portrait{aspect-ratio:1/1;max-height:44vh;justify-self:center;width:min(100%,420px)}
+.nerf-dossier .dossier-name{font-size:clamp(26px,7vw,36px)}
+.nerf-dossier .dossier-desc{max-width:none}
+.nerf-dossier .dossier-nav{width:42px;height:42px}
+.nerf-dossier .dossier-nav-prev{left:6px}
+.nerf-dossier .dossier-nav-next{right:6px}
+}
+@keyframes dossierPortraitIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes dossierInfoIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dossierGlowPulse{0%,100%{opacity:.55}50%{opacity:.85}}
+@media(prefers-reduced-motion:reduce){
+.nerf-dossier .dossier-portrait,.nerf-dossier .dossier-info{animation:none}
+.nerf-dossier .dossier-glow{animation:none;opacity:.6}
+}`;
   document.head.appendChild(style);
 }
 
@@ -155,6 +202,149 @@ function buildShell(){
 
   prevBtn.addEventListener("click", ()=>step(-1));
   nextBtn.addEventListener("click", ()=>step(1));
+}
+
+// Derives the dossier's combat type + description from the real
+// combat-ai.js COMBAT profile, so it can never drift out of sync with
+// what actually happens in a match — no second, hand-written balance
+// description to maintain.
+function describeCombat(id){
+  const p = COMBAT[id];
+  if(!p) return { type:"UNKNOWN", desc:"" };
+  const type = p.kind==="melee" ? "MELEE" : p.kind==="ranged" ? "RANGED" : "HYBRID";
+  const style = p.kind==="melee"
+    ? `Closes in fast and swings at close range (~${p.range}u).`
+    : p.kind==="ranged"
+      ? `Keeps distance and fires from up to ${p.range}u out.`
+      : `Circles at mid-range (~${p.range}u), mixing melee pressure with ranged shots.`;
+  return { type, desc:`${style} Speed ${p.speed.toFixed(2)}x · Cooldown ${p.cooldown.toFixed(2)}s.` };
+}
+
+let dossier = null, dossierImg, dossierIndex, dossierName, dossierHandle, dossierWeapon, dossierType, dossierDesc, dossierQuip, dossierPrev, dossierNext, dossierClose, dossierPortrait;
+let dossierActiveIndex = 0, dossierOpener = null;
+
+function buildDossier(){
+  if(dossier) return;
+  dossier = document.createElement("dialog");
+  dossier.className = "nerf-dossier";
+  dossier.innerHTML = `
+    <button type="button" class="dossier-close" aria-label="Close character dossier">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </button>
+    <button type="button" class="dossier-nav dossier-nav-prev" aria-label="Previous character">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button type="button" class="dossier-nav dossier-nav-next" aria-label="Next character">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="dossier-inner">
+      <div class="dossier-portrait">
+        <img alt="">
+        <div class="dossier-glow" aria-hidden="true"></div>
+      </div>
+      <div class="dossier-info">
+        <div class="dossier-index"></div>
+        <h2 class="dossier-name" id="dossierName"></h2>
+        <a class="dossier-handle" target="_blank" rel="noopener noreferrer"></a>
+        <div class="dossier-tags">
+          <span class="dossier-tag dossier-weapon"></span>
+          <span class="dossier-tag dossier-type"></span>
+        </div>
+        <p class="dossier-desc" id="dossierDesc"></p>
+        <p class="dossier-quip"></p>
+      </div>
+    </div>`;
+  document.body.appendChild(dossier);
+
+  dossierPortrait = dossier.querySelector(".dossier-portrait");
+  dossierImg = dossier.querySelector(".dossier-portrait img");
+  dossierIndex = dossier.querySelector(".dossier-index");
+  dossierName = dossier.querySelector(".dossier-name");
+  dossierHandle = dossier.querySelector(".dossier-handle");
+  dossierWeapon = dossier.querySelector(".dossier-weapon");
+  dossierType = dossier.querySelector(".dossier-type");
+  dossierDesc = dossier.querySelector(".dossier-desc");
+  dossierQuip = dossier.querySelector(".dossier-quip");
+  dossierPrev = dossier.querySelector(".dossier-nav-prev");
+  dossierNext = dossier.querySelector(".dossier-nav-next");
+  dossierClose = dossier.querySelector(".dossier-close");
+
+  dossier.setAttribute("aria-labelledby", "dossierName");
+  dossier.setAttribute("aria-describedby", "dossierDesc");
+
+  dossierClose.addEventListener("click", ()=>dossier.close());
+  dossierPrev.addEventListener("click", ()=>dossierStep(-1));
+  dossierNext.addEventListener("click", ()=>dossierStep(1));
+
+  // click on the backdrop (the dialog element itself, not its content) closes it
+  dossier.addEventListener("click", e=>{ if(e.target===dossier) dossier.close(); });
+
+  dossier.addEventListener("keydown", e=>{
+    if(e.key==="ArrowLeft"){ e.preventDefault(); e.stopPropagation(); dossierStep(-1); }
+    else if(e.key==="ArrowRight"){ e.preventDefault(); e.stopPropagation(); dossierStep(1); }
+    // Escape is handled natively by <dialog>; no extra code needed.
+  });
+
+  // single source of truth for cleanup on every close path (Escape,
+  // backdrop click, the × button, or a future programmatic close) —
+  // <dialog>'s "close" event fires for all of them alike. Focus goes to
+  // whichever card the dossier ends on (kept in sync by dossierStep,
+  // below), not necessarily the exact card that opened it — prev/next
+  // inside the dossier moves the carousel's own "active" card too, and
+  // only the active card carries a tabindex, so the original opener may
+  // no longer be focusable by the time the dossier closes.
+  dossier.addEventListener("close", ()=>{
+    const target = cards[dossierActiveIndex] || dossierOpener;
+    if(target && document.contains(target)) target.focus();
+    dossierOpener = null;
+  });
+}
+
+function renderDossier(index){
+  dossierActiveIndex = Math.max(0, Math.min(ROSTER.length-1, index));
+  const p = ROSTER[dossierActiveIndex];
+  const combat = describeCombat(p.id);
+  const teamDef = TEAM_ROSTER.find(r=>r.id===p.id);
+  const quip = teamDef?.lines?.[0] || "";
+
+  dossier.style.setProperty("--accent", p.accent);
+  // restart the entrance animations on every character switch
+  dossierPortrait.style.animation = "none";
+  dossier.querySelector(".dossier-info").style.animation = "none";
+  void dossier.offsetWidth; // force reflow
+  dossierPortrait.style.animation = "";
+  dossier.querySelector(".dossier-info").style.animation = "";
+
+  dossierImg.src = p.img;
+  dossierImg.alt = `${p.name} character portrait`;
+  dossierIndex.textContent = `${String(dossierActiveIndex+1).padStart(2,"0")} / ${String(ROSTER.length).padStart(2,"0")}`;
+  dossierName.textContent = p.name;
+  dossierHandle.textContent = `@${p.handle}`;
+  dossierHandle.href = `https://x.com/${encodeURIComponent(p.handle)}`;
+  dossierWeapon.textContent = p.weapon;
+  dossierType.textContent = combat.type;
+  dossierDesc.textContent = combat.desc;
+  dossierQuip.textContent = quip ? `"${quip}"` : "";
+
+  dossierPrev.disabled = dossierActiveIndex<=0;
+  dossierNext.disabled = dossierActiveIndex>=ROSTER.length-1;
+}
+
+function dossierStep(dir){
+  const next = dossierActiveIndex + dir;
+  if(next<0 || next>=ROSTER.length) return;
+  renderDossier(next);
+  // keep the card carousel behind the dossier in sync, so closing lands
+  // back on whichever character the dossier was showing
+  if(cards[next]) goToCard(cards[next], false);
+}
+
+function openDossier(index, opener){
+  buildDossier();
+  dossierOpener = opener || null;
+  renderDossier(index);
+  if(typeof dossier.showModal === "function") dossier.showModal();
+  else dossier.setAttribute("open",""); // extremely old browsers: degrade to non-modal
 }
 
 function renderRoster(){
@@ -202,7 +392,16 @@ function renderRoster(){
       card.style.setProperty("--ry",`${((e.clientX-r.left)/r.width-.5)*5}deg`);
     });
     card.addEventListener("pointerleave",()=>{card.style.setProperty("--rx","0deg");card.style.setProperty("--ry","0deg")});
-    card.addEventListener("click",()=>{ if(!card.classList.contains("is-active")) goToCard(card); });
+    card.addEventListener("click",()=>{
+      if(!card.classList.contains("is-active")) goToCard(card);
+      else openDossier(i, card);
+    });
+    card.addEventListener("keydown",e=>{
+      if((e.key==="Enter"||e.key===" ") && card.classList.contains("is-active")){
+        e.preventDefault();
+        openDossier(i, card);
+      }
+    });
   });
 }
 
@@ -211,7 +410,19 @@ function currentActive(){
 }
 
 function setActive(target){
-  cards.forEach(c=>c.classList.toggle("is-active", c===target));
+  cards.forEach(c=>{
+    const isActive = c===target;
+    c.classList.toggle("is-active", isActive);
+    if(isActive){
+      c.setAttribute("tabindex","0");
+      c.setAttribute("role","button");
+      c.setAttribute("aria-label", `View ${ROSTER[cards.indexOf(c)]?.name || ""} dossier`);
+    } else {
+      c.removeAttribute("tabindex");
+      c.removeAttribute("role");
+      c.removeAttribute("aria-label");
+    }
+  });
   if(prevBtn) prevBtn.disabled = cards.indexOf(target) <= 0;
   if(nextBtn) nextBtn.disabled = cards.indexOf(target) >= cards.length-1;
 }
@@ -278,5 +489,6 @@ renderRoster();
 if(cards.length) setActive(cards[0]);
 initLifecycle();
 
-document.getElementById("btnNerfsBack")?.addEventListener("click",()=>{ show(scTitle); scTitle.scrollTop=0; });
+document.getElementById("btnNerfsBack")?.addEventListener("click",()=>{ goBack(); scTitle.scrollTop=0; });
 document.getElementById("btnNerfsStart")?.addEventListener("click",()=>startRun());
+document.getElementById("btnTitleNerfs")?.addEventListener("click",()=>{ show(screen); screen.scrollTop=0; });

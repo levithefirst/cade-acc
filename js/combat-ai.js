@@ -5,7 +5,7 @@
 import { CFG, rnd, clamp, lerp, TAU } from "./config.js";
 import { Teams } from "./teams.js";
 import { Player } from "./player.js";
-import { Game, ctx, W, H, S, Theme } from "./main.js";
+import { Game, ctx, W, H, S, Theme, pausableNow } from "./main.js";
 import { Pumps } from "./pumps.js";
 import { FX, Parts, Rings, Floaters } from "./particles.js";
 import { SFX, Haptics } from "./audio.js";
@@ -193,7 +193,7 @@ function install(){
       ctx.save();
       ctx.translate(t.x,t.y);
       if(t.attackT>0){
-        ctx.globalAlpha=.35+Math.sin(performance.now()/35)*.15;
+        ctx.globalAlpha=.35+Math.sin(pausableNow()/35)*.15;
         ctx.strokeStyle=t.roster.accent;ctx.lineWidth=2*S;
         ctx.beginPath();ctx.arc(0,0,t.r+9*S,0,TAU);ctx.stroke();
       }

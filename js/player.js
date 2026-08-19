@@ -9,7 +9,7 @@
    stay meaningful even when boosted.
    ============================================================ */
 import { CFG, clamp, rnd, TAU } from "./config.js";
-import { ctx, W, H, S, Input } from "./main.js";
+import { ctx, W, H, S, Input, pausableNow } from "./main.js";
 import { Game } from "./main.js";
 import { Theme } from "./main.js";
 import { FX, Parts } from "./particles.js";
@@ -197,7 +197,7 @@ export const Player = {
     // boost ring — a second, faster pulse outside the dash-ready ring,
     // makes "you are currently fast" unmistakable at a glance
     if(Game.boosted){
-      ctx.globalAlpha = 0.55+Math.sin(performance.now()/90)*0.3;
+      ctx.globalAlpha = 0.55+Math.sin(pausableNow()/90)*0.3;
       ctx.strokeStyle = tc.yellow; ctx.lineWidth = 2*S;
       ctx.beginPath(); ctx.arc(this.x,this.y,this.r+13*S,0,TAU); ctx.stroke();
       ctx.globalAlpha = 1;
@@ -205,7 +205,7 @@ export const Player = {
 
     // dash-ready ring
     if(this.dashCd<=0 && this.dash<=0){
-      ctx.globalAlpha = 0.5+Math.sin(performance.now()/180)*0.25;
+      ctx.globalAlpha = 0.5+Math.sin(pausableNow()/180)*0.25;
       ctx.strokeStyle="#FC8400"; ctx.lineWidth=1.5*S;
       ctx.beginPath(); ctx.arc(this.x,this.y,this.r+7*S,0,TAU); ctx.stroke();
     } else if(this.dashCd>0){

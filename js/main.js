@@ -129,6 +129,18 @@ const grainPattern = (()=>{
   return ctx.createPattern(pc, "repeat");
 })();
 
+// Used by every render-time-only pulse/flicker effect (boost ring, dash
+// ring, timer bob, multiplier pulse, exposed-target ring, attack
+// telegraph) instead of a raw performance.now() call. render() keeps
+// running while paused so the arena stays visible, but these cosmetic
+// animations must NOT keep animating off real wall-clock time while
+// frozen — this returns the timestamp pause began, held constant for as
+// long as Game.paused is true, so they visibly stop along with everything
+// else instead of pulsing through the pause overlay.
+export function pausableNow(){
+  return Game.paused ? (Game.pausedAtMs ?? performance.now()) : performance.now();
+}
+
 export function lifeIconPos(i){
   const lx0 = 18*S, ly = 16*S+52*S, lsz = 12*S, lgap = 18*S;
   return { x: lx0 + i*lgap + lsz/2, y: ly + lsz/2, size: lsz };
@@ -197,6 +209,10 @@ document.addEventListener("visibilitychange", ()=>{ tabHidden = document.hidden;
    ============================================================ */
 export const Game = {
   scene:"title",            // title | play | freeze | finalrug | out | results
+  paused:false,              // gates Game.update() in frame() below — the single
+                              // choke point every timer/AI/projectile/particle
+                              // system runs through, so nothing else needs its
+                              // own pause check. See js/pause.js for the control.
   time:CFG.RUN_SECONDS,
   score:0, multi:1, multiTimer:0, bestMulti:1,
   meltdown:false, spawnTimer:0, difficulty:0,
@@ -211,6 +227,7 @@ export const Game = {
   stats:{grazes:0, pumps:0, hits:0, dashes:0, shredded:0, spawned:0, bigPumps:0, nerfs:0, firstHitAt:null},
 
   reset(){
+    this.paused=false;
     this.time=CFG.RUN_SECONDS; this.score=0; this.multi=1; this.multiTimer=0;
     this.bestMulti=1; this.meltdown=false; this.spawnTimer=0; this.difficulty=0;
     this.sceneT=0; this.finalRug=null; this.survivedFinal=false;
@@ -681,7 +698,7 @@ function drawPost(){
   ctx.fillRect(0,0,W,H);
   ctx.globalAlpha=1;
 
-  if(FX.glitch>0.05){
+  if(FX.glitch>0.05 && !Game.paused){
     const slices = Math.min(5, Math.ceil(FX.glitch*4));
     for(let i=0;i<slices;i++){
       const sy = rnd(0,H), sh = rnd(4,18)*S, off = rnd(-14,14)*FX.glitch*S;
@@ -724,7 +741,11 @@ function drawPost(){
 function render(){
   const sh = FX.shake;
   ctx.save();
-  if(sh>0.1) ctx.translate(rnd(-sh,sh), rnd(-sh,sh));
+  // shake magnitude itself freezes with everything else in Game.update(),
+  // but rnd() still picks a fresh random offset every render() call (which
+  // keeps running while paused so the arena stays visible) — suppress the
+  // jitter itself during pause rather than let it keep shaking in place.
+  if(sh>0.1 && !Game.paused) ctx.translate(rnd(-sh,sh), rnd(-sh,sh));
 
   drawBackground();
   if(Game.scene==="title") Ambient.draw();
@@ -759,8 +780,15 @@ function frame(now){
   if(tabHidden){ last = now; requestAnimationFrame(frame); return; }
   let dt = (now-last)/1000; last = now;
   dt = Math.min(dt, 1/30); // cap so tab-switches/hitches don't teleport entities
-  if(Game.scene!=="title" && Game.scene!=="results") Game.update(dt);
-  else { FX.update(dt); Parts.update(dt); Floaters.update(dt); Rings.update(dt); Ambient.update(dt); Game.bgPulse += dt; }
+  if(Game.scene==="title" || Game.scene==="results"){
+    FX.update(dt); Parts.update(dt); Floaters.update(dt); Rings.update(dt); Ambient.update(dt); Game.bgPulse += dt;
+  } else if(!Game.paused){
+    Game.update(dt);
+  }
+  // while paused: skip Game.update(dt) entirely (freezes timer, player,
+  // AI, projectiles, rugs, pumps, multiplier decay, dash, particles —
+  // everything lives inside that one call) but still render() below so
+  // the arena stays visible behind the pause overlay.
   render();
   requestAnimationFrame(frame);
 }
