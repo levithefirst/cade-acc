@@ -1,4 +1,3 @@
-import "./visual-fix.js";
 import { startRun } from "./ui.js";
 
 const screen = document.getElementById("scNerfs");

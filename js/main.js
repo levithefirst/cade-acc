@@ -782,10 +782,41 @@ function frame(now){
 Ambient.init();
 paintTitleHighScore();
 initTheme();   // also paints the brand marks via Theme.apply() -> paintDomMarks()
-paintRosterShowcase();
-window.addEventListener("resize", paintRosterShowcase, {passive:true});
-window.addEventListener("orientationchange", ()=>setTimeout(paintRosterShowcase,120));
 initSound();
 initPlayerName();
+
+/* ============================================================
+   TITLE SHOWCASE REPAINT LIFECYCLE
+   #roster-showcase can only be measured (getBoundingClientRect) once
+   #scTitle actually has a non-zero layout — and #scTitle starts hidden
+   behind the identity gate, so painting it here eagerly at boot would
+   size the canvas backing store at 0x0 and produce a blank/see-through
+   rectangle. Instead this repaints only once #scTitle gains the "on"
+   class (identity gate resolved, or navigating back to title), plus on
+   every resize/orientation change while title is showing. This is the
+   single authoritative repaint path for the showcase — do not add a
+   second one elsewhere.
+   ============================================================ */
+(function initRosterShowcaseLifecycle(){
+  const title = document.getElementById("scTitle");
+  const canvas = document.getElementById("roster-showcase");
+  if(!title || !canvas) return;
+
+  let raf = 0;
+  function repaintIfVisible(){
+    if(!title.classList.contains("on")) return;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(()=>{ if(title.classList.contains("on")) paintRosterShowcase(); });
+  }
+
+  new MutationObserver(muts=>{
+    if(muts.some(m=>m.type==="attributes" && m.attributeName==="class")) repaintIfVisible();
+  }).observe(title, {attributes:true, attributeFilter:["class"]});
+
+  window.addEventListener("resize", repaintIfVisible, {passive:true});
+  window.addEventListener("orientationchange", ()=>setTimeout(repaintIfVisible,120));
+
+  repaintIfVisible(); // covers the case where #scTitle is already "on" at boot
+})();
 
 requestAnimationFrame(frame);
