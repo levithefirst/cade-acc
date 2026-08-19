@@ -29,7 +29,7 @@ function injectStyles(){
 #scNerfs .nerf-card::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 48%);pointer-events:none}
 #scNerfs .nerf-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--accent);opacity:.85;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 35%,transparent);z-index:5}
 #scNerfs .nerf-portrait{grid-row:1;position:relative;width:100%;height:100%;min-height:170px;overflow:hidden;background:#141414;z-index:1;transform:translateZ(12px);isolation:isolate}
-#scNerfs .nerf-portrait img{position:absolute;top:0;left:calc(var(--sprite-index) * -100%);width:600%;height:100%;max-width:none;display:block;object-fit:fill;object-position:left top;user-select:none;-webkit-user-drag:none;transform:translateZ(0) scale(1.01);filter:saturate(.96) contrast(1.03);animation:cadeNerfFloat 4.8s ease-in-out infinite}
+#scNerfs .nerf-portrait img{position:absolute;top:0;left:calc(var(--sprite-index) * -100%);width:600%;height:100%;max-width:none;display:block;object-fit:cover;object-position:left center;user-select:none;-webkit-user-drag:none;transform:translateZ(0) scale(1.01);filter:saturate(.96) contrast(1.03);animation:cadeNerfFloat 4.8s ease-in-out infinite}
 #scNerfs .nerf-portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(20,20,20,.68) 100%);pointer-events:none;z-index:2}
 #scNerfs .nerf-meta{position:relative;z-index:3;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:11px 14px 12px}
 #scNerfs .nerf-copy{min-width:0}
