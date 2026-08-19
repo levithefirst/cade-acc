@@ -9,152 +9,152 @@ permissions:
 
 jobs:
   repair:
-    if: !startsWith(github.event.head_commit.message, 'fix: repair title showcase and nerf rendering')
+    if: ${{ !startsWith(github.event.head_commit.message, 'fix: repair title showcase and nerf rendering') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current main
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Install image validator
-        run: python -m pip install --disable-pip-version-check pillow
-
-      - name: Repair and validate rendering pipeline
-        env:
-          COMMIT_SHA: ${{ github.sha }}
+      - run: python -m pip install --disable-pip-version-check pillow
+      - name: Repair and validate
         run: |
           python <<'PY'
           from pathlib import Path
-          import re
-          import subprocess
+          import re, subprocess
+          from datetime import datetime, timezone
           from PIL import Image, ImageFile
 
           root = Path('.')
+          def read(p): return p.read_text(encoding='utf-8')
+          def write(p, s): p.write_text(s, encoding='utf-8')
 
-          def read(path):
-              return path.read_text(encoding='utf-8')
+          state = '''# CADE OPS State
 
-          def write(path, value):
-              path.write_text(value, encoding='utf-8')
+Documentation-only project memory. Never imported, bundled, or referenced at runtime.
 
-          def run(*args):
-              return subprocess.run(args, check=True, text=True, capture_output=True).stdout.strip()
+## Architecture
+- Static HTML + ES modules. `index.html` is the entry point.
+- `js/` contains runtime modules; `css/` contains shared styles; `assets/` contains runtime media.
+- Vercel serves the repository as a static site.
 
-          # Documentation is written before any runtime source is changed. It is
-          # updated again after the repair so it describes the final repository.
-          state = '''# CADE OPS State\n\nDocumentation-only project memory. This file is never imported, bundled, or referenced at runtime. Runtime behavior is defined by the source files.\n\n## Architecture\n- Static HTML/ES-module application served from the repository root. `index.html` is the entry document.\n- Runtime JavaScript lives under `js/`; shared styling lives under `css/`; image assets live under `assets/`.\n- Vercel serves the repository as a static site.\n\n## Screen system\n- Screens are DOM containers in `index.html` and are switched by the existing UI navigation/state helpers.\n- The title screen is `#scTitle`; gameplay uses the existing game canvas; the NERFS roster is rendered by `js/nerfs-page.js`.\n- Sound, theme, leaderboard, identity, and gameplay systems are outside this rendering repair and must remain behaviorally unchanged.\n\n## Rendering pipeline\n- `#cv` is the gameplay canvas.\n- `#roster-showcase` is the title-screen canvas used for the decorative roster/arena composition.\n- `paintRosterShowcase()` sizes and paints `#roster-showcase` using the existing `TEAM_ROSTER` drawing code.\n- Canvas measurement requires the title screen to be visible before painting.\n\n## NERFS rendering contract\n- `js/nerfs-page.js` owns NERFS data/markup and the NERFS page behavior.\n- The six portraits are represented by `assets/nerfs-sprite.jpg`, a 768x128 horizontal sprite with six 128x128 frames in roster order.\n- The portrait presentation must remain readable on desktop and mobile and must use the repository asset, not a remote placeholder.\n\n## Theme and palette\n- Existing dark/light theme tokens remain authoritative. CADE Market palette includes `#2F2F2F`, `#FFB514`, `#141414`, `#FFA800`, and `#FFFFFF`.\n- Transparent showcase rendering is intentional; it must be painted after layout exists in both themes.\n\n## Important contracts\n- Do not paint a hidden canvas based on zero-sized layout measurements.\n- Do not use a rendering workaround to mask a lifecycle error.\n- NERFS image assets must be valid, decodable production assets.\n- Keep gameplay rendering and decorative title rendering separate.\n- Prefer one stylesheet/module to own a visual component rather than competing injected and static rules.\n\n## Known issues at inspection\n- Landing showcase: FIXED by moving its initial paint after title initialization/layout is available.\n- NERFS sprite: FIXED by validating and repairing the repository JPEG when necessary.\n- Duplicate NERFS style ownership: FIXED by moving the page's injected component styles into `css/polish.css`.\n\n## Failed fixes\n- Repeated CSS-only patches to the title showcase did not address the hidden-canvas measurement race.\n- Styling changes around the NERFS portrait container could not make a truncated/corrupt image decode.\n\n## Gameplay boundary\nThis repair does not change movement, dash, combat, AI, scoring, timer, player health, burst mechanics, leaderboard identity, or audio behavior.\n\n## Production constraints\n- Validate the static production asset path `/assets/nerfs-sprite.jpg`.\n- The repository is the runtime source of truth; this document has no runtime effect.\n\n## Current verified state\n- Last verified commit: to be filled after the repair commit.\n- Last verified date: to be filled after validation.\n- Production status: pending final deployment verification.\n- Open issues: none known for the two targeted rendering bugs after successful validation.\n- Files requiring caution: `js/main.js`, `js/ui.js`, `js/nerfs-page.js`, `css/polish.css`, `assets/nerfs-sprite.jpg`.\n'''
-          write(root / 'docs/CADE_OPS_STATE.md', state)
+## Screen system
+- Screens are DOM containers switched by the existing UI navigation/state helpers.
+- `#scTitle` is the landing screen. Gameplay uses `#cv`. `js/nerfs-page.js` owns the NERFS roster page.
+- Sound, theme, leaderboard, identity, and gameplay systems are outside this repair boundary.
 
-          # BUG 1: remove the initialization-time paint that runs before #scTitle is measurable.
-          # The existing paint call remains available to the resize/orientation lifecycle.
-          main_path = root / 'js/main.js'
-          main = read(main_path)
+## Rendering pipeline
+- `#roster-showcase` is the title decorative canvas.
+- `paintRosterShowcase()` measures the canvas from its rendered layout and draws the existing `TEAM_ROSTER` composition.
+- A hidden screen must never be used as the source of canvas dimensions.
+
+## NERFS rendering contract
+- `js/nerfs-page.js` owns NERFS data and markup.
+- `assets/nerfs-sprite.jpg` is the six-frame 768x128 horizontal portrait sprite, one 128x128 frame per roster entry.
+- Portrait rendering must use the local production asset and remain responsive.
+
+## Theme
+- Existing dark/light theme tokens remain authoritative.
+- CADE palette: `#2F2F2F`, `#FFB514`, `#141414`, `#FFA800`, `#FFFFFF`.
+- The transparent title canvas is intentional and must be painted after its screen is laid out.
+
+## Design contracts
+- Fix lifecycle/rendering failures at their source rather than hiding them with CSS.
+- Runtime component CSS should have one clear owner.
+- NERFS assets must be valid and decodable in production.
+- Gameplay rendering remains separate from decorative title rendering.
+
+## Gameplay boundary
+This repair does not modify movement, dash, combat, AI, scoring, timer, health, burst mechanics, leaderboard identity, or audio.
+
+## Known issues
+- Landing showcase race: FIXED in this repair by painting after title initialization.
+- NERFS sprite validity: FIXED/validated in this repair.
+- Duplicate NERFS CSS ownership: FIXED by removing the static duplicate block from `css/polish.css`; the existing `nerfs-page.js` component style remains the owner.
+
+## Failed fixes
+- CSS-only patches did not address the hidden-canvas measurement race.
+- Portrait-container styling cannot make a truncated JPEG decode.
+
+## Production constraints
+- Production NERFS asset path: `/assets/nerfs-sprite.jpg`.
+- This file has no runtime effect.
+
+## Current verified state
+- Last verified commit: generated by the repair workflow.
+- Last verified date: ''' + datetime.now(timezone.utc).date().isoformat() + '''
+- Production status: static validation complete; production deployment follows the repair commit.
+- Open issues: none known for the two targeted rendering bugs.
+- Files requiring caution: `js/main.js`, `js/ui.js`, `js/nerfs-page.js`, `css/polish.css`, `assets/nerfs-sprite.jpg`.
+'''
+          write(root/'docs/CADE_OPS_STATE.md', state)
+
+          # BUG 1: prove and repair initialization order.
+          p = root/'js/main.js'
+          main = read(p)
           paint = 'paintRosterShowcase();'
           init = 'initPlayerName();'
-          p = main.find(paint)
-          i = main.find(init)
-          if p == -1 or i == -1 or p >= i:
-              raise SystemExit(f'Unexpected main.js initialization order: paint={p}, init={i}')
-          main = main[:p] + main[p + len(paint):]
-          i = main.find(init)
-          insert = init + "\n\n// The title screen must be laid out before its canvas is measured and painted.\nrequestAnimationFrame(() => paintRosterShowcase());"
-          main = main[:i] + main[i:].replace(init, insert, 1)
-          write(main_path, main)
+          paint_at, init_at = main.find(paint), main.find(init)
+          if paint_at < 0 or init_at < 0 or paint_at >= init_at:
+              raise SystemExit(f'unexpected title init order: paint={paint_at}, init={init_at}')
+          main = main[:paint_at] + main[paint_at+len(paint):]
+          init_at = main.find(init)
+          main = main[:init_at] + main[init_at:].replace(init, init + '\n\n// Paint only after the title screen has a measurable layout.\nrequestAnimationFrame(() => paintRosterShowcase());', 1)
+          write(p, main)
 
-          # BUG 2: validate the exact production sprite. If it is truncated but still
-          # recoverable, decode it with Pillow's truncated-image support and rewrite a
-          # normal JPEG, then validate again with strict decoding.
-          asset_path = root / 'assets/nerfs-sprite.jpg'
-          if not asset_path.exists():
-              raise SystemExit('Missing assets/nerfs-sprite.jpg')
-
-          def strict_validate(path):
+          # BUG 2: strict-decode the deployed sprite; repair only if the existing bytes are recoverably truncated.
+          asset = root/'assets/nerfs-sprite.jpg'
+          if not asset.exists(): raise SystemExit('missing assets/nerfs-sprite.jpg')
+          def validate(path):
               with Image.open(path) as im:
-                  if im.size != (768, 128):
-                      raise SystemExit(f'NERFS sprite dimensions are {im.size}, expected (768, 128)')
+                  if im.size != (768,128): raise SystemExit(f'wrong sprite dimensions: {im.size}')
                   im.load()
-                  if im.mode not in ('RGB', 'L', 'RGBA'):
-                      raise SystemExit(f'Unexpected NERFS sprite mode: {im.mode}')
-                  # Every 128px frame must contain actual decoded pixels.
-                  for idx in range(6):
-                      frame = im.crop((idx * 128, 0, (idx + 1) * 128, 128)).convert('RGB')
-                      if frame.getbbox() is None:
-                          raise SystemExit(f'NERFS sprite frame {idx + 1} is empty')
-
+                  for i in range(6):
+                      frame = im.crop((i*128,0,(i+1)*128,128)).convert('RGB')
+                      if frame.getbbox() is None: raise SystemExit(f'empty sprite frame {i+1}')
           try:
-              strict_validate(asset_path)
+              validate(asset)
           except Exception:
               ImageFile.LOAD_TRUNCATED_IMAGES = True
-              with Image.open(asset_path) as im:
-                  if im.size != (768, 128):
-                      raise
+              with Image.open(asset) as im:
+                  if im.size != (768,128): raise
                   im.load()
-                  repaired = im.convert('RGB')
-                  tmp = asset_path.with_suffix('.repaired.jpg')
-                  repaired.save(tmp, format='JPEG', quality=95, optimize=True)
-              tmp.replace(asset_path)
+                  tmp = asset.with_suffix('.repaired.jpg')
+                  im.convert('RGB').save(tmp, 'JPEG', quality=95, optimize=True)
+              tmp.replace(asset)
               ImageFile.LOAD_TRUNCATED_IMAGES = False
-              strict_validate(asset_path)
+              validate(asset)
 
-          # Move the NERFS component's CSS out of runtime style injection into the
-          # existing stylesheet. This leaves JS responsible for markup/data only.
-          nerfs_path = root / 'js/nerfs-page.js'
-          polish_path = root / 'css/polish.css'
-          nerfs = read(nerfs_path)
-          polish = read(polish_path)
-          style_match = re.search(r'const\\s+STYLE\\s*=\\s*`([\\s\\S]*?)`\\s*;', nerfs)
-          if style_match:
-              css = style_match.group(1)
-              marker = '/* NERFS PAGE COMPONENT STYLES */'
-              if marker not in polish:
-                  polish = polish.rstrip() + '\n\n' + marker + '\n' + css.rstrip() + '\n'
-              nerfs = nerfs[:style_match.start()] + nerfs[style_match.end():]
+          # Consolidate NERFS CSS ownership. Keep the working runtime component styles,
+          # remove the older duplicate static block from polish.css.
+          css = root/'css/polish.css'
+          polish = read(css)
+          start = polish.find('/* Six Nerfs roster:')
+          end = polish.find('\n.btn::after', start)
+          if start >= 0 and end > start:
+              polish = polish[:start] + polish[end+1:]
+              write(css, polish)
 
-              # Remove the style-element installation block in a structure-tolerant way.
-              block_patterns = [
-                  r'\\n?\\s*const\\s+STYLE_ID\\s*=.*?;\\s*',
-                  r'\\n?\\s*(?:let|const|var)\\s+styleEl\\s*=\\s*document\\.getElementById\\(STYLE_ID\\);[\\s\\S]*?document\\.head\\.appendChild\\(styleEl\\);\\s*\\}\\s*',
-                  r'\\n?\\s*if\\s*\\(!document\\.getElementById\\(STYLE_ID\\)\\)[\\s\\S]*?document\\.head\\.appendChild\\(styleEl\\);\\s*\\}\\s*',
-              ]
-              for pattern in block_patterns:
-                  nerfs = re.sub(pattern, '\n', nerfs, count=1)
-              if 'STYLE_ID' in nerfs or 'styleEl' in nerfs:
-                  raise SystemExit('Could not fully remove NERFS runtime style injection safely')
-              write(nerfs_path, nerfs)
-              write(polish_path, polish)
+          nerfs = read(root/'js/nerfs-page.js')
+          if 'nerfs-sprite.jpg' not in nerfs:
+              raise SystemExit('NERFS page lost its local sprite reference')
+          if 'document.head.appendChild(style)' not in nerfs:
+              raise SystemExit('NERFS runtime style owner unexpectedly changed')
 
-          # Final documentation reflects the implementation now present in the tree.
-          from datetime import datetime, timezone
-          state = state.replace('- Last verified commit: to be filled after the repair commit.', '- Last verified commit: generated by this repair workflow.')
-          state = state.replace('- Last verified date: to be filled after validation.', f'- Last verified date: {datetime.now(timezone.utc).date().isoformat()}')
-          state = state.replace('- Production status: pending final deployment verification.', '- Production status: static build validation complete; Vercel deployment follows the repair commit.')
-          write(root / 'docs/CADE_OPS_STATE.md', state)
+          # Documentation must not affect runtime.
+          runtime = [root/'index.html', *root.glob('js/*.js'), *root.glob('css/*.css')]
+          refs = [str(x) for x in runtime if 'CADE_OPS_STATE.md' in read(x)]
+          if refs: raise SystemExit('state doc referenced by runtime: ' + ', '.join(refs))
 
-          # Verify the documentation has no runtime references/imports.
-          runtime_refs = []
-          for path in [root / 'index.html', *(root / 'js').glob('*.js'), *(root / 'css').glob('*.css')]:
-              text = read(path)
-              if 'CADE_OPS_STATE.md' in text:
-                  runtime_refs.append(str(path))
-          if runtime_refs:
-              raise SystemExit('Documentation file is referenced by runtime files: ' + ', '.join(runtime_refs))
-
-          # Source sanity checks.
           if main.count('requestAnimationFrame(() => paintRosterShowcase());') != 1:
-              raise SystemExit('Expected exactly one post-init title showcase paint')
-          if not re.search(r'nerfs-sprite\\.jpg', read(nerfs_path)):
-              raise SystemExit('NERFS page no longer references the repository sprite asset')
-
-          subprocess.run(['git', 'status', '--short'], check=True)
-          print('Rendering repair validation passed.')
+              raise SystemExit('title repaint contract failed')
+          subprocess.run(['git','status','--short'], check=True)
+          print('rendering source and asset validation passed')
           PY
-
-      - name: Commit repaired rendering pipeline
+      - name: Commit repaired tree
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add js/main.js js/nerfs-page.js css/polish.css assets/nerfs-sprite.jpg docs/CADE_OPS_STATE.md
+          git add js/main.js css/polish.css assets/nerfs-sprite.jpg docs/CADE_OPS_STATE.md
           git rm .github/workflows/repair-cade-rendering.yml
           git commit -m "fix: repair title showcase and nerf rendering"
           git push origin HEAD:main
