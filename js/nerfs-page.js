@@ -15,6 +15,16 @@ const ROSTER = [
 
 if (!screen || !grid) throw new Error("CADE OPS: NERFS screen markup is missing.");
 
+// Per-character idle-fx personality: relative pacing only, keeps all six on one shared system.
+const FX = {
+  steve:    { float:"5.6s", amt:"4px", glitch:"11s", gAmt:"2px",   scan:"8s",   sweep:"9s",   glow:"6.5s" },
+  gnar:     { float:"4.2s", amt:"4px", glitch:"6.5s", gAmt:"3px",   scan:"6s",   sweep:"8s",   glow:"4.5s" },
+  kosgood:  { float:"5.8s", amt:"3px", glitch:"10s",  gAmt:"3.5px", scan:"7s",   sweep:"6.5s", glow:"7s"   },
+  scotty:   { float:"6.4s", amt:"6px", glitch:"9s",   gAmt:"2.5px", scan:"7.5s", sweep:"10s",  glow:"8s"   },
+  rookmate: { float:"4.4s", amt:"4px", glitch:"6s",   gAmt:"3.5px", scan:"6.5s", sweep:"8.5s", glow:"5s"   },
+  poppunk:  { float:"4s",   amt:"4px", glitch:"5s",   gAmt:"3px",   scan:"4.5s", sweep:"7s",   glow:"4s"   }
+};
+
 function injectStyles(){
   if(document.getElementById("cade-nerfs-roster-style")) return;
   const style=document.createElement("style");
@@ -25,11 +35,18 @@ function injectStyles(){
 #scNerfs .nerfs-subtitle{text-transform:uppercase;letter-spacing:.16em;font-size:9px;color:rgba(255,255,255,.48)}
 #scNerfs .nerfs-grid{width:min(100%,1380px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:8px auto 4px}
 #scNerfs .nerf-card{--rx:0deg;--ry:0deg;position:relative;min-width:0;min-height:270px;display:grid;grid-template-rows:minmax(170px,1fr) auto auto;overflow:hidden;background:linear-gradient(150deg,#2F2F2F 0%,#1b1b1b 58%,#141414 100%);border:1px solid rgba(255,255,255,.12);border-top-color:color-mix(in srgb,var(--accent) 55%,rgba(255,255,255,.12));border-radius:16px;box-shadow:0 18px 36px rgba(0,0,0,.36);transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s,border-color .22s;animation:cadeNerfIn .5s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--delay);isolation:isolate}
-#scNerfs .nerf-card::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 48%);pointer-events:none}
+#scNerfs .nerf-card::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 48%);pointer-events:none;animation:cadeNerfGlowPulse var(--glow-dur,6s) ease-in-out infinite;animation-delay:var(--float-delay,0s)}
 #scNerfs .nerf-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--accent);opacity:.85;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 35%,transparent);z-index:5}
 #scNerfs .nerf-portrait{grid-row:1;position:relative;width:100%;height:100%;min-height:170px;overflow:hidden;background:#141414;z-index:1;transform:translateZ(12px);isolation:isolate}
-#scNerfs .nerf-portrait img{position:absolute;top:0;left:calc(var(--sprite-index) * -100%);width:600%;height:100%;max-width:none;display:block;object-fit:cover;object-position:left center;user-select:none;-webkit-user-drag:none;transform:translateZ(0) scale(1.01);filter:saturate(.96) contrast(1.03);animation:cadeNerfFloat 4.8s ease-in-out infinite}
-#scNerfs .nerf-portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(20,20,20,.68) 100%);pointer-events:none;z-index:2}
+#scNerfs .nerf-portrait-motion{position:absolute;inset:0;animation:cadeNerfFloat var(--float-dur,4.8s) ease-in-out infinite;animation-delay:var(--float-delay,0s)}
+#scNerfs .nerf-portrait-motion img{position:absolute;top:0;left:calc(var(--sprite-index) * -100%);width:600%;height:100%;max-width:none;display:block;object-fit:cover;object-position:left center;user-select:none;-webkit-user-drag:none;filter:saturate(.96) contrast(1.03);animation:cadeNerfImgGlitch var(--glitch-dur,9s) steps(1) infinite;animation-delay:var(--glitch-delay,0s)}
+#scNerfs .nerf-glitch{position:absolute;top:0;left:calc(var(--sprite-index) * -100%);width:600%;height:100%;background-image:url(${IMAGE});background-size:cover;background-position:center;pointer-events:none;mix-blend-mode:screen;opacity:0}
+#scNerfs .nerf-glitch-r{filter:sepia(1) saturate(6) hue-rotate(-50deg) brightness(1.15);animation:cadeNerfGlitchR var(--glitch-dur,9s) steps(1) infinite;animation-delay:var(--glitch-delay,0s)}
+#scNerfs .nerf-glitch-b{filter:sepia(1) saturate(6) hue-rotate(150deg) brightness(1.15);animation:cadeNerfGlitchB var(--glitch-dur,9s) steps(1) infinite;animation-delay:var(--glitch-delay,0s)}
+#scNerfs .nerf-scan{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;opacity:.5;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.09) 0 1px,transparent 1px 3px);background-size:100% 6px;animation:cadeNerfScan var(--scan-dur,7s) linear infinite}
+#scNerfs .nerf-sweep{position:absolute;inset:-20% -60%;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.16) 50%,transparent 58%);background-size:250% 250%;background-position:-60% -60%;animation:cadeNerfSweep var(--sweep-dur,9s) ease-in-out infinite}
+#scNerfs .nerf-noise{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='60' height='60' filter='url(%23n)'/></svg>");animation:cadeNerfNoiseFlicker 3.4s steps(2) infinite}
+#scNerfs .nerf-portrait::after{content:"";position:absolute;inset:0;z-index:5;background:linear-gradient(180deg,transparent 55%,rgba(20,20,20,.68) 100%);pointer-events:none}
 #scNerfs .nerf-meta{position:relative;z-index:3;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:11px 14px 12px}
 #scNerfs .nerf-copy{min-width:0}
 #scNerfs .nerf-name{margin:0;font:900 clamp(19px,2vw,27px)/1 var(--display);letter-spacing:.01em;color:#fff}
@@ -45,15 +62,41 @@ function injectStyles(){
 @media(max-width:760px){#scNerfs{padding-left:12px;padding-right:12px}#scNerfs .nerfs-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px auto 4px}#scNerfs .nerf-card{min-height:225px;grid-template-rows:minmax(130px,1fr) auto auto}#scNerfs .nerf-portrait{min-height:130px}#scNerfs .nerf-name{font-size:15px}#scNerfs .nerf-handle{font-size:8px}#scNerfs .nerf-meta{padding:8px 10px 9px}#scNerfs .nerf-weapon{padding:5px 6px;font-size:6px}#scNerfs .nerf-x{width:28px;height:28px;flex-basis:28px}#scNerfs .nerf-label{padding:0 10px 9px;font-size:6px}}
 @media(max-width:430px){#scNerfs .nerf-card{min-height:210px}#scNerfs .nerf-portrait{min-height:118px}#scNerfs .nerf-name{font-size:14px}}
 @media(max-height:740px){#scNerfs{padding-top:14px;padding-bottom:14px;gap:5px}#scNerfs .nerfs-heading{font-size:clamp(24px,5vw,34px)}}
-#scNerfs .nerf-card:nth-child(1) .nerf-portrait img{animation-delay:0s}
-#scNerfs .nerf-card:nth-child(2) .nerf-portrait img{animation-delay:-.8s}
-#scNerfs .nerf-card:nth-child(3) .nerf-portrait img{animation-delay:-1.6s}
-#scNerfs .nerf-card:nth-child(4) .nerf-portrait img{animation-delay:-2.4s}
-#scNerfs .nerf-card:nth-child(5) .nerf-portrait img{animation-delay:-3.2s}
-#scNerfs .nerf-card:nth-child(6) .nerf-portrait img{animation-delay:-4s}
-@media(prefers-reduced-motion:reduce){#scNerfs .nerf-card{animation:none;transition:none;transform:none}#scNerfs .nerf-portrait img{animation:none}}
+@media(prefers-reduced-motion:reduce){
+#scNerfs .nerf-card{animation:none;transition:none;transform:none}
+#scNerfs .nerf-card::before{animation:none}
+#scNerfs .nerf-portrait-motion{animation:none}
+#scNerfs .nerf-portrait-motion img{animation:none;transform:translateZ(0) scale(1.01)}
+#scNerfs .nerf-glitch{animation:none}
+#scNerfs .nerf-scan,#scNerfs .nerf-sweep,#scNerfs .nerf-noise{animation:none}
+}
 @keyframes cadeNerfIn{from{opacity:0;transform:perspective(900px) translateY(16px) scale(.985)}to{opacity:1;transform:perspective(900px) translateY(0) scale(1)}}
-@keyframes cadeNerfFloat{0%,100%{transform:translateZ(0) scale(1.01) translateY(0)}50%{transform:translateZ(8px) scale(1.03) translateY(-5px)}}`;
+@keyframes cadeNerfFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(calc(var(--float-amt,4px) * -1)) scale(1.015)}}
+@keyframes cadeNerfImgGlitch{
+0%,92%,100%{transform:translateZ(0) scale(1.01) translateX(0)}
+93%{transform:translateZ(0) scale(1.01) translateX(calc(var(--glitch-amt,2.5px) * 1.4))}
+94%{transform:translateZ(0) scale(1.01) translateX(0)}
+95.5%{transform:translateZ(0) scale(1.01) translateX(calc(var(--glitch-amt,2.5px) * -1.4))}
+96.5%{transform:translateZ(0) scale(1.01) translateX(0)}
+}
+@keyframes cadeNerfGlitchR{
+0%,92%,100%{opacity:0;transform:translateX(0)}
+93%{opacity:.32;transform:translateX(calc(var(--glitch-amt,2.5px) * -1))}
+94%{opacity:0;transform:translateX(0)}
+95.5%{opacity:.28;transform:translateX(calc(var(--glitch-amt,2.5px) * -1.6))}
+96.5%{opacity:0;transform:translateX(0)}
+}
+@keyframes cadeNerfGlitchB{
+0%,92%,100%{opacity:0;transform:translateX(0)}
+93%{opacity:.32;transform:translateX(var(--glitch-amt,2.5px))}
+94%{opacity:0;transform:translateX(0)}
+95.5%{opacity:.28;transform:translateX(calc(var(--glitch-amt,2.5px) * 1.6))}
+96.5%{opacity:0;transform:translateX(0)}
+}
+@keyframes cadeNerfScan{0%{background-position-y:0}100%{background-position-y:120px}}
+@keyframes cadeNerfSweep{0%,72%{background-position:-60% -60%}84%{background-position:140% 140%}100%{background-position:140% 140%}}
+@keyframes cadeNerfNoiseFlicker{0%,100%{opacity:.045}50%{opacity:.09}}
+@keyframes cadeNerfGlowPulse{0%,100%{opacity:.7}50%{opacity:1}}`;
   document.head.appendChild(style);
 }
 
@@ -65,9 +108,26 @@ function renderRoster(){
     card.style.setProperty("--accent",p.accent);
     card.style.setProperty("--sprite-index",p.index);
     card.style.setProperty("--delay",`${i*55}ms`);
+    const fx=FX[p.id]||{};
+    card.style.setProperty("--float-dur",fx.float||"4.8s");
+    card.style.setProperty("--float-amt",fx.amt||"4px");
+    card.style.setProperty("--glitch-dur",fx.glitch||"9s");
+    card.style.setProperty("--glitch-amt",fx.gAmt||"2.5px");
+    card.style.setProperty("--scan-dur",fx.scan||"7s");
+    card.style.setProperty("--sweep-dur",fx.sweep||"9s");
+    card.style.setProperty("--glow-dur",fx.glow||"6s");
+    card.style.setProperty("--float-delay",`${-i*0.7}s`);
+    card.style.setProperty("--glitch-delay",`${-i*1.3}s`);
     card.innerHTML=`
       <div class="nerf-portrait" aria-label="${p.name} character artwork">
-        <img src="${IMAGE}" alt="${p.name} PFP" width="128" height="128" loading="eager" decoding="async" draggable="false">
+        <div class="nerf-portrait-motion">
+          <img src="${IMAGE}" alt="${p.name} PFP" width="128" height="128" loading="eager" decoding="async" draggable="false">
+          <div class="nerf-glitch nerf-glitch-r" aria-hidden="true"></div>
+          <div class="nerf-glitch nerf-glitch-b" aria-hidden="true"></div>
+        </div>
+        <div class="nerf-scan" aria-hidden="true"></div>
+        <div class="nerf-sweep" aria-hidden="true"></div>
+        <div class="nerf-noise" aria-hidden="true"></div>
       </div>
       <div class="nerf-meta">
         <div class="nerf-copy"><h2 class="nerf-name">${p.name}</h2><div class="nerf-handle">@${p.handle}</div></div>
