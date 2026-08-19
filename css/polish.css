@@ -92,10 +92,19 @@
 #scEnd .stats{width:min(100%,600px);gap:7px}#scEnd .stat{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);border-radius:10px;box-shadow:none}
 #scEnd .stat .k{color:rgba(255,255,255,.42)}#scEnd .stat .v{color:#fff}#scEnd .hs{font:900 9px/1 var(--mono);letter-spacing:.12em;color:rgba(255,255,255,.50)}
 #scEnd .name-group-results{width:min(100%,430px)}#scEnd .name-input{width:100%;background:rgba(255,255,255,.055);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:12px 14px;font-family:var(--mono);font-weight:800;outline:none}
-#scEnd .name-input:focus{border-color:var(--cade-yellow);box-shadow:0 0 0 3px rgba(255,181,20,.12)}#scEnd .name-hint{color:rgba(255,255,255,.42);font-size:10px;margin-top:4px}
-#scEnd .tweetbox{max-width:600px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72)}
+#scEnd .name-input:focus{border-color:var(--cade-yellow);box-shadow:0 0 0 3px rgba(255,181,20,.12)}
 #scEnd .btn:not(.ghost){box-shadow:0 12px 24px rgba(255,168,0,.15)}#scEnd .btn.x-share{background:#fff;color:#111;border-color:#fff}
 #scEnd .btn.ghost{background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);border-color:rgba(255,255,255,.11)}#scEnd>.row{gap:7px;flex-wrap:wrap}
+/* Results screen declutter: keep score/rank/primary stats and every
+   navigation action (Run It Back, Leaderboard, Home, Share) exactly as
+   they were. Hide only the secondary detail that was making the page
+   feel long and stacked — the six granular secondary stats, the
+   explanatory "locked to this player" hint, and the tweet-text preview
+   (Share on X / Copy Tweet still work identically: both read #eTweet's
+   textContent, which is unaffected by display:none). */
+#scEnd .stats-secondary{display:none}
+#scEnd .name-hint{display:none}
+#scEnd .tweetbox{display:none}
 @media(max-height:760px){#scEnd{gap:5px;padding-top:12px}#scEnd .brandmark-end{height:19px}#scEnd .bigscore{font-size:clamp(62px,16vw,116px)}}
 
 /* NOTE: #scNerfs's card/grid layout is owned entirely by the <style>
