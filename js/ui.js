@@ -299,12 +299,13 @@ export const scTitle = document.getElementById("scTitle");
 export const scEnd = document.getElementById("scEnd");
 export const scLeaderboard = document.getElementById("scLeaderboard");
 export const scHowToPlay = document.getElementById("scHowToPlay");
+export const scNerfs = document.getElementById("scNerfs");
 export const dashBtn = document.getElementById("dashBtn");
 scTitle.classList.add("first-in");
 export const isTouchDevice = (window.matchMedia && matchMedia("(pointer:coarse)").matches) || "ontouchstart" in window;
 
 export function show(el){
-  [scTitle,scEnd,scLeaderboard,scHowToPlay].forEach(s=>s && s.classList.remove("on"));
+  [scTitle,scEnd,scLeaderboard,scHowToPlay,scNerfs].forEach(s=>s && s.classList.remove("on"));
   if(el) el.classList.add("on");
   dashBtn.classList.remove("show");
 }
@@ -319,11 +320,13 @@ export function startRun(){
   if(isTouchDevice) dashBtn.classList.add("show");
 }
 
-// Let's Cade -> How to Play (gate) -> then the run actually starts.
-// "Run It Back" on results skips this — that's a repeat player who
-// already knows the rules, gating them again would just be annoying.
+// Let's Cade -> How to Play (gate) -> Meet The 6 Nerfs -> then the run
+// actually starts (from the NERFS page's own "Let's Cade" button, wired
+// in nerfs-page.js). "Run It Back" on results skips this whole chain —
+// that's a repeat player who already knows the rules, gating them again
+// would just be annoying.
 document.getElementById("btnStart").addEventListener("click", ()=>{ SFX.ui(); show(scHowToPlay); });
-document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); startRun(); });
+document.getElementById("btnHowToPlayBack")?.addEventListener("click", ()=>{ SFX.ui(); show(scNerfs); if(scNerfs) scNerfs.scrollTop=0; });
 document.getElementById("btnAgain")?.addEventListener("click", ()=>{ SFX.ui(); startRun(); });
 
 // dedicated touch dash button — more reliable than double-tap during

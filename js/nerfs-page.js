@@ -1,4 +1,4 @@
-import { startRun } from "./ui.js";
+import { startRun, show, scTitle } from "./ui.js";
 
 const screen = document.getElementById("scNerfs");
 const grid = document.getElementById("nerfsGrid");
@@ -50,12 +50,6 @@ function injectStyles(){
   document.head.appendChild(style);
 }
 
-function showScreen(target){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));
-  target.classList.add("show");
-  target.scrollTop=0;
-}
-
 function renderRoster(){
   grid.innerHTML="";
   ROSTER.forEach((p,i)=>{
@@ -88,5 +82,5 @@ function renderRoster(){
 injectStyles();
 renderRoster();
 
-document.getElementById("btnNerfsBack")?.addEventListener("click",()=>showScreen(document.getElementById("scTitle")));
+document.getElementById("btnNerfsBack")?.addEventListener("click",()=>{ show(scTitle); scTitle.scrollTop=0; });
 document.getElementById("btnNerfsStart")?.addEventListener("click",()=>startRun());
