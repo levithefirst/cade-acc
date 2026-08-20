@@ -16,6 +16,12 @@ const identityHint = document.getElementById("identityHint");
 const identityStatus = document.getElementById("identityStatus");
 const lockedName = document.getElementById("playerNameLocked");
 
+// The global game keyboard handler owns WASD/arrow controls and calls
+// preventDefault() for those keys. Keep text entry isolated from that
+// gameplay handler so callsigns can contain A/S/D (and other normal text
+// input keys) without changing gameplay input behavior.
+identityInput?.addEventListener("keydown", e => e.stopPropagation());
+
 function setLockedName(name) {
   if (lockedName) lockedName.textContent = name || "DEGEN";
 }
