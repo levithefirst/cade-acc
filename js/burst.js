@@ -25,7 +25,7 @@ const BURST = Object.freeze({
 let charge = 0;
 let lastPumps = 0;
 let lastGrazes = 0;
-let burstLock = 0;
+let burstLockUntil = 0;
 let pulse = 0;
 
 const burstBtn = document.getElementById("burstBtn");
@@ -85,7 +85,7 @@ function killNearbyNerfs(){
   let kills = 0;
   for(const t of Teams.pool){
     if(!t.on || t.disabled || !t.roster) continue;
-    if(Math.hypot(Player.x-t.x, Player.y-t.y) <= radius){
+    if(Math.hypot(Player.x-t.x,Player.y-t.y) <= radius){
       Teams.nerf(t);
       kills++;
     }
@@ -94,9 +94,10 @@ function killNearbyNerfs(){
 }
 
 export function activate(){
-  if(Game.scene !== "play" || Game.paused || Player.alive === false || burstLock > 0 || charge < 1) return false;
+  const now = performance.now();
+  if(Game.scene !== "play" || Game.paused || Player.alive === false || now < burstLockUntil || charge < 1) return false;
   setCharge(0);
-  burstLock = BURST.COOLDOWN_LOCK;
+  burstLockUntil = now + BURST.COOLDOWN_LOCK*1000;
   Game.stats.burstUses = (Game.stats.burstUses||0) + 1;
 
   const cleared = clearNearbyThreats();
@@ -133,7 +134,7 @@ Game.reset = function(){
   setCharge(0);
   lastPumps = 0;
   lastGrazes = 0;
-  burstLock = 0;
+  burstLockUntil = 0;
   pulse = 0;
   Game.stats.burstUses = 0;
   shots.length = 0;
@@ -143,6 +144,7 @@ const originalEndRun = Game.endRun.bind(Game);
 Game.endRun = function(){
   shots.length = 0;
   setCharge(0);
+  burstLockUntil = 0;
   originalEndRun();
 };
 
@@ -186,14 +188,16 @@ function drawBurstPulse(){
   ctx.restore();
 }
 
-function frame(){
+let lastFrame = performance.now();
+function frame(now){
+  const frameDt = Math.min(0.1, Math.max(0, (now-lastFrame)/1000));
+  lastFrame = now;
   if(Game.scene !== "play"){
     if(shots.length) shots.length=0;
     burstHud.classList.remove("show","ready");
     if(burstBtn) burstBtn.classList.remove("show","ready");
   }else if(!Game.paused){
-    if(burstLock>0) burstLock=Math.max(0,burstLock-1/60);
-    if(pulse>0) pulse=Math.max(0,pulse-1/45);
+    if(pulse>0) pulse=Math.max(0,pulse-frameDt/0.45);
     burstHud.classList.add("show");
     setCharge(charge);
     drawBurstPulse();
