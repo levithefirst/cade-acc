@@ -4,11 +4,9 @@
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
-const LEGACY_KEY = "caderush:leaderboard";
 const PLAYER_LEADERBOARD_KEY = "caderush:players:leaderboard";
 const PLAYER_PREFIX = "caderush:player:";
 const PLAYER_COOKIE = "__Host-cade_player_id";
-const MAX_PLAUSIBLE_SCORE = 1_000_000;
 const RATE_LIMIT_WINDOW = 60;
 const RATE_LIMIT_MAX = 5;
 const RUN_TTL = 86400;
@@ -45,6 +43,32 @@ function sameOrigin(req) {
   return origin === `${proto}://${host}`;
 }
 
+// Rate-limit increments and expiry atomically. Without this, a failed request
+// between INCR and EXPIRE could leave an IP rate-limit key alive indefinitely.
+const RATE_LIMIT_SCRIPT = `
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+return count
+`;
+
+// A run is idempotent and the leaderboard update is atomic with the run claim.
+// This removes the old failure window where a run could be marked consumed before
+// ZADD succeeded, permanently losing a legitimate score after a transient Redis error.
+const SUBMIT_RUN_SCRIPT = `
+if redis.call("EXISTS", KEYS[1]) == 1 then
+  local rank = redis.call("ZREVRANK", KEYS[2], ARGV[1])
+  if rank == false then return {0, -1} end
+  return {0, rank}
+end
+redis.call("ZADD", KEYS[2], "GT", ARGV[2], ARGV[1])
+redis.call("SET", KEYS[1], "1", "EX", ARGV[3])
+local rank = redis.call("ZREVRANK", KEYS[2], ARGV[1])
+if rank == false then return {1, -1} end
+return {1, rank}
+`;
+
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -65,7 +89,9 @@ export default async function handler(req, res) {
 
     const body = req.body || {};
     const cleanScore = Math.round(Number(body.score));
-    if (!Number.isFinite(cleanScore) || cleanScore < 0 || cleanScore > MAX_PLAUSIBLE_SCORE) {
+    // There is deliberately no game-score ceiling. The only rejection here is
+    // for values JavaScript cannot represent as a finite non-negative integer.
+    if (!Number.isSafeInteger(cleanScore) || cleanScore < 0) {
       return res.status(400).json({ error: "Invalid score" });
     }
 
@@ -76,35 +102,41 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Callsign is locked" });
     }
 
-    const ip = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+    const ip = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
     const rlKey = `caderush:rl:${ip}`;
-    const count = await redis(["INCR", rlKey]);
-    if (count.result === 1) await redis(["EXPIRE", rlKey, RATE_LIMIT_WINDOW]);
-    if (count.result > RATE_LIMIT_MAX) return res.status(429).json({ error: "Too many submissions — slow down" });
+    const rateResult = await redis(["EVAL", RATE_LIMIT_SCRIPT, 1, rlKey, RATE_LIMIT_WINDOW]);
+    const count = Number(rateResult.result || 0);
+    if (count > RATE_LIMIT_MAX) return res.status(429).json({ error: "Too many submissions — slow down" });
 
     const runId = typeof body.runId === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(body.runId)
       ? body.runId
       : null;
     if (!runId) return res.status(400).json({ error: "Run identity required" });
 
-    // One score submission per run. Replays of the same payload are ignored.
     const runKey = `caderush:run:${cookiePlayerId}:${runId}`;
-    const claimed = await redis(["SET", runKey, "1", "EX", RUN_TTL, "NX"]);
-    if (claimed.result !== "OK") {
-      const rankResult = await redis(["ZREVRANK", PLAYER_LEADERBOARD_KEY, cookiePlayerId]);
-      return res.status(200).json({ ok: true, duplicate: true, rank: rankResult.result === null ? null : rankResult.result + 1, name: player.name });
-    }
+    const result = await redis([
+      "EVAL",
+      SUBMIT_RUN_SCRIPT,
+      2,
+      runKey,
+      PLAYER_LEADERBOARD_KEY,
+      cookiePlayerId,
+      cleanScore,
+      RUN_TTL,
+    ]);
 
-    // The canonical leaderboard has one member per player. ZADD GT keeps the best run.
-    await redis(["ZADD", PLAYER_LEADERBOARD_KEY, "GT", cleanScore, cookiePlayerId]);
-
-    // Keep the old run-based leaderboard untouched. It is legacy historical data.
-    // New scores never write to it, so old identities are never fabricated.
-    const rankResult = await redis(["ZREVRANK", PLAYER_LEADERBOARD_KEY, cookiePlayerId]);
-    const rank = rankResult.result !== null ? rankResult.result + 1 : null;
+    const values = result.result || [];
+    const accepted = Number(values[0]) === 1;
+    const rankValue = Number(values[1]);
+    const rank = rankValue >= 0 ? rankValue + 1 : null;
 
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json({ ok: true, rank, name: player.name });
+    return res.status(200).json({
+      ok: true,
+      duplicate: !accepted,
+      rank,
+      name: player.name,
+    });
   } catch (err) {
     return res.status(500).json({ error: "Submission failed" });
   }
