@@ -5,80 +5,73 @@ Documentation-only project memory. This file is never imported by JavaScript, CS
 ## Last Verified
 - Date: 2026-08-20
 - Repository: `levithefirst/cade-acc`, branch `main`
-- Latest V2 prototype commit: `aca188f30f155a78081c833928c72e13f638261a`
-- The existing CADE OPS game remains intact. V2 Hunt is an additive prototype entry point from the title screen.
+- Latest source repair commit: `6c50671059449494e4488d62eb51072fc3752ffb`
+- Production currently serves the previous READY deployment until the Git-connected deployment for the latest commit completes.
 
 ## Architecture
 - Static HTML + native ES modules. `index.html` is the entry point.
-- `js/main.js` owns the original game state, animation loop, gameplay canvas, input state, theme state, and viewport sizing.
-- `js/player.js`, `js/teams.js`, `js/rugs.js`, `js/pumps.js`, `js/combat-ai.js`, `js/burst.js`, `js/pause.js`, and `js/particles.js` provide the original gameplay systems.
-- `js/ui.js` owns the original DOM screen navigation, HUD/results rendering, title showcase, sound/theme UI, and share actions.
+- `js/main.js` owns central game state, animation loop, gameplay canvas, input state, theme state, and viewport sizing.
+- `js/player.js`, `js/teams.js`, `js/rugs.js`, `js/pumps.js`, `js/combat-ai.js`, `js/burst.js`, `js/pause.js`, and `js/particles.js` provide gameplay systems.
+- `js/ui.js` owns DOM screen navigation, HUD/results rendering, title showcase drawing, sound/theme UI, and share actions.
 - `js/leaderboard.js` owns callsign registration, client identity persistence, score submission, and leaderboard display.
-- `/api/player.js`, `/api/submit-score.js`, and `/api/leaderboard.js` are Vercel serverless endpoints backed by the existing persistence layer.
-- `js/hunt-v2.js` is a self-contained tactical Hunt prototype. It owns its own map, simulation loop, AI states, abilities, scoring, extraction, HUD, and result overlay. It does not replace the original Game loop.
-
-## V2 Hunt Prototype
-The title screen now exposes `CADE HUNT V2`.
-
-Core loop:
-- 60-second single-player hunt.
-- One compact tactical map with walls, cover, routes, and an extraction zone.
-- Six NERFs act as hunters.
-- AI uses `UNKNOWN → INVESTIGATING → SEARCHING → HUNTING` states.
-- Line-of-sight is blocked by map walls.
-- NERFs retain last-known player/decoy positions during investigation/search.
-- Roles are explicit: Steve Controller, Gnar Brute, Kosgood Assassin, Scotty Tracker, Rookmate Ranged, Pop Punk Disruptor.
-- Four abilities are available: Rail Shot, EMP Burst, Decoy, Ghost Step.
-- The final 10 seconds open extraction. The player must reach the extraction zone before time expires.
-- Score has no artificial maximum. Multiplier can continue increasing during a run.
-- The original CADE OPS game remains available through `Let's Cade`.
-
-## V2 Controls
-- Desktop: WASD / arrow keys to move, mouse to aim, 1–4 for abilities.
-- Mobile: four on-screen ability buttons are provided. The tactical movement layer is currently keyboard-first; mobile movement remains a follow-up prototype task.
-- Escape ends the Hunt prototype run.
+- `/api/player.js`, `/api/submit-score.js`, and `/api/leaderboard.js` are Vercel serverless endpoints backed by Upstash Redis.
+- CSS is split between shared stylesheets and component-specific injected NERFS styles in `js/nerfs-page.js`.
 
 ## Leaderboard Contracts
-- The existing leaderboard remains separate from the V2 Hunt prototype in this first pass.
-- Canonical score storage keeps the best score per registered player.
-- Legacy run-based rows remain readable.
-- There is no arbitrary game-score ceiling in the existing leaderboard submission contract.
-- Score submission remains idempotent through the existing run claim flow.
+- Player identity is server-authoritative through the HttpOnly `__Host-cade_player_id` cookie.
+- Canonical leaderboard storage has one member per registered player and keeps the best score with Redis `ZADD GT`.
+- Legacy run-based leaderboard rows remain readable and are never overwritten by new canonical submissions.
+- There is no arbitrary game-score ceiling. Scores must only be finite, non-negative, safely representable integers in JavaScript.
+- A run submission is idempotent for 24 hours through its `runId`.
+- The run claim and canonical leaderboard update now happen inside one atomic Redis Lua script. A transient failure can no longer consume a run before its score is written.
+- IP rate-limit increment and expiry now happen inside one atomic Redis Lua script, avoiding an unexpired rate-limit key if the request fails between those operations.
+- The client persists a pending score and retries it after reload or when opening the leaderboard, and the leaderboard waits for the in-flight score write before fetching results.
 
-## Original Gameplay Systems
-- `Game.update()` is the central original simulation path.
+## Gameplay Systems
+- `Game.update()` is the central simulation path.
 - Player movement supports pointer/touch plus WASD/arrow controls. Dash is handled by the existing player system.
-- Teams are the original NERF objectives and collision hazards. Rugs and pumps are separate arena systems.
+- Teams are the NERF objectives and collision hazards. Rugs and pumps are separate arena systems.
 - Combat AI is attached to the existing team update/draw flow.
-- Score, multiplier, lives, timer, nerf count, pumps, grazes, dashes, hits, Burst, and final-rug behavior remain in the original modules.
-
-## Important Decisions
-- V2 is additive rather than a rewrite. The current game stays playable while the Hunt prototype is tested.
-- WebSockets, accounts, matchmaking, multiplayer authority, large maps, progression systems, and seasonal systems are deliberately not part of this prototype.
-- The tactical core is prioritized first: map knowledge, detection, last-known position, role differentiation, abilities, pressure, and extraction.
-- NERFs are hunters first. Making all six playable is deferred.
-- The map is intentionally compact so routes and danger zones can be learned quickly.
+- Score, multiplier, lives, timer, nerf count, pumps, grazes, dashes, hits, Burst, and final-rug behavior remain in the existing gameplay modules.
+- The leaderboard repair did not change gameplay mechanics, scoring formulas, difficulty, combat, AI, or run timing.
 
 ## Verification
-- [x] Current repository tree inspected before V2 implementation.
-- [x] V2 files added without replacing the original Game loop.
-- [x] Hunt JS passed Node syntax checking before commit.
-- [x] Desktop keyboard controls implemented.
-- [x] Four abilities implemented with cooldowns.
-- [x] Detection, LOS, investigation, search, chase, and extraction implemented.
-- [x] Six NERF roles implemented.
-- [x] No artificial score ceiling added to V2.
-- [ ] Production browser playtest of a complete 60-second Hunt remains required.
-- [ ] Mobile movement needs a dedicated touch movement pass.
-- [ ] V2 scores are not yet submitted to the global leaderboard.
+- [x] Current repository tree inspected.
+- [x] `/api/player.js` inspected.
+- [x] `/api/submit-score.js` inspected and repaired.
+- [x] `/api/leaderboard.js` inspected.
+- [x] Client leaderboard submission/retry path inspected.
+- [x] Production leaderboard endpoint returned HTTP 200 with current data.
+- [x] Production runtime logs inspected for the last 6 hours.
+- [x] The observed production HTTP 400 was traced to the obsolete score ceiling.
+- [x] Source-level JavaScript syntax of the new Redis-script wrapper was checked with Node.
+- [x] The old failure window between run claiming and `ZADD` was removed.
+- [x] Rate-limit increment/expiry race was removed.
+- [ ] Production deployment of commit `6c50671059449494e4488d62eb51072fc3752ffb` still needs to become READY.
+- [ ] A real browser session must submit a >200,000 score to validate the live cookie/session path end-to-end.
 
-## Known Follow-ups
-- Add a proper touch joystick or drag-to-move control for Hunt.
-- Add richer NERF silhouettes/animation to the V2 arena once the core loop is playtested.
-- Tune detection radii, role speeds, attack cadence, map routes, and extraction pressure from real play sessions.
-- Decide whether V2 should eventually replace the original `Let's Cade` flow after playtesting, rather than removing the original game now.
+## Known Production Signals
+- In the last 6 hours before the latest source repair, production recorded 20 HTTP 200 responses, one HTTP 400, and one HTTP 405 across the inspected serverless traffic.
+- The single HTTP 400 was `POST /api/submit-score` at 12:43 UTC on the older deployment and corresponded to the legitimate high-score rejection.
+- The only grouped runtime error reported in the last hour was Node's `DEP0169` `url.parse()` deprecation warning on `/api/leaderboard`, with no application exception cluster reported.
 
-## Do Not Change Casually
-- Original game loop, scoring, identity, leaderboard, combat, AI, audio, theme, and responsive behavior.
-- Existing production API contracts.
-- `docs/CADE_OPS_STATE.md` must remain documentation-only.
+## Resolved Issues
+### Leaderboard rejecting legitimate high scores
+- Root cause: the server had a hard `MAX_PLAUSIBLE_SCORE` ceiling that rejected the observed 219,636 run.
+- Fix: removed the game-score ceiling entirely. Only invalid numeric values are rejected.
+
+### Score submission could be lost after a transient Redis failure
+- Root cause: the old code claimed `runId` before performing `ZADD`. If `ZADD` failed after the claim, a retry was treated as a duplicate and the score could be stranded in local pending storage.
+- Fix: the run claim and best-score update are now one atomic Redis Lua operation.
+
+### Rate-limit key could become permanent
+- Root cause: `INCR` and `EXPIRE` were separate network operations. A failure between them could leave the key without expiry.
+- Fix: increment and expiry are now one atomic Redis Lua operation.
+
+### Stale leaderboard immediately after Game Over
+- Root cause: score submission could still be in flight while the leaderboard was opened.
+- Fix: the client tracks the submission promise and waits for it before fetching the board.
+
+## Remaining Verification
+- The current source is repaired, but production must be checked again after Vercel serves commit `6c50671059449494e4488d62eb51072fc3752ffb`.
+- A real-device submission above 200,000 remains the final end-to-end check because this environment cannot reuse the user's browser cookie/session.
