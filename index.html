@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/polish.css">
 <link rel="stylesheet" href="css/burst.css">
 <link rel="stylesheet" href="css/identity.css">
+<link rel="stylesheet" href="css/hunt-v2.css">
 </head>
 <body>
 <div id="stage"><canvas id="cv"></canvas></div>
@@ -20,6 +21,32 @@
 </button>
 
 <button id="burstBtn" aria-label="Burst" type="button">BURST</button>
+
+<div class="screen" id="scHunt">
+  <canvas id="huntCanvas" tabindex="0" aria-label="CADE Hunt tactical arena"></canvas>
+  <div class="hunt-topbar">
+    <div><span class="hunt-kicker">CADE OPS V2</span><strong>HUNT</strong></div>
+    <div class="hunt-objective" id="huntStatus">SURVIVE AND ESCAPE</div>
+    <div class="hunt-time"><span id="huntTime">60.0</span><small>SEC</small></div>
+  </div>
+  <div class="hunt-score"><small>BAG</small><strong id="huntScore">0</strong></div>
+  <div class="hunt-meter-wrap"><div class="hunt-meter-label">HUNT PRESSURE</div><div class="hunt-meter" id="huntMeter"><i class="hunt-fill"></i></div></div>
+  <div class="hunt-abilities" id="huntAbilities"></div>
+  <div class="hunt-mobile-controls"><button id="huntA1">1<br><small>RAIL</small></button><button id="huntA2">2<br><small>EMP</small></button><button id="huntA3">3<br><small>DECOY</small></button><button id="huntA4">4<br><small>GHOST</small></button></div>
+  <div class="hunt-intro">
+    <div class="eyebrow">TACTICAL HUNT</div>
+    <h2>THEY HAVE NUMBERS.<br><span>YOU HAVE TOOLS.</span></h2>
+    <p>WASD to move · 1–4 abilities · mouse to aim</p>
+    <div class="hunt-role-row"><span>STEVE · CONTROLLER</span><span>GNAR · BRUTE</span><span>KOSGOOD · ASSASSIN</span><span>SCOTTY · TRACKER</span><span>ROOKMATE · RANGED</span><span>POP PUNK · DISRUPTOR</span></div>
+    <button class="btn" id="huntStart">START HUNT</button>
+    <button class="btn ghost" id="huntBack">BACK</button>
+  </div>
+  <div class="hunt-end" id="huntEnd">
+    <div class="eyebrow">CADE HUNT</div><div class="hunt-result" id="huntResult">ESCAPED</div>
+    <div class="hunt-final-score" id="huntFinalScore">0</div><div class="hunt-final-grid"><div><b id="huntFinalNerfs">0</b><span>NERFS</span></div><div><b id="huntFinalClose">0</b><span>CLOSE CALLS</span></div><div><b id="huntFinalTime">0.0s</b><span>SURVIVAL</span></div></div>
+    <div class="row"><button class="btn" id="huntAgain">RUN IT BACK</button><button class="btn ghost" id="huntHome">HOME</button></div>
+  </div>
+</div>
 
 <div class="screen" id="scIdentity">
   <div class="identity-mark">CADE OPS</div>
@@ -39,80 +66,35 @@
 <div class="screen" id="scTitle">
   <canvas class="brandmark brandmark-title" id="markTitle"></canvas>
   <div class="tagline">CadeMarket presents</div>
-  <div class="spotlight-beam" aria-hidden="true"></div>
   <h1 class="wordmark"><span class="a">CADE</span><br><span class="b" data-text="OPS">OPS</span></h1>
   <div class="tagline tagline-sharp">Dash. Nerf. Dominate.</div>
   <canvas id="roster-showcase" aria-label="The six Cade Ops characters"></canvas>
   <button class="btn" id="btnStart">Let's Cade</button>
+  <button class="btn ghost" id="btnHuntV2">CADE HUNT V2</button>
   <div class="row">
     <div class="hs" id="tHigh"></div>
-    <button class="btn ghost sound-toggle icon-label" id="btnSound">
-      <svg viewBox="0 0 24 24" class="icon-svg" id="soundIconSvg" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>
-      <span id="soundLabel">Sound On</span>
-    </button>
-    <button class="btn ghost theme-toggle" id="btnTheme" aria-label="Toggle theme">
-      <svg viewBox="0 0 24 24" class="icon-svg" id="themeIconTitle" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-    </button>
+    <button class="btn ghost sound-toggle icon-label" id="btnSound"><svg viewBox="0 0 24 24" class="icon-svg" id="soundIconSvg" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg><span id="soundLabel">Sound On</span></button>
+    <button class="btn ghost theme-toggle" id="btnTheme" aria-label="Toggle theme"><svg viewBox="0 0 24 24" class="icon-svg" id="themeIconTitle" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <button class="btn ghost" id="btnLeaderboard">🏆 Leaderboard</button>
     <button class="btn ghost" id="btnTitleNerfs">Meet The Nerfs</button>
   </div>
 </div>
 
 <div class="screen" id="scHowToPlay">
-  <div class="eyebrow">Cade Ops</div>
-  <div class="rank">HOW TO PLAY</div>
-  <p class="rules">Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br><span class="k">SPACE</span> = <b>BURST</b>. <span class="k">⚡ button</span> = <b>APE DASH</b>. Dash through a team leader to <b>nerf</b> them.<br>You've got <b>6 lives</b>. Touching a team or a rug without dashing <span class="c-danger">costs a life</span>. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>Green pumps pay out multiplied — <span class="c-gold">3 in a row fills your energy bar</span> for a speed boost.<br><b>BURST</b> charges from Pumps and close calls. Use it when the arena gets crowded.<br><b>Nerf as many teams as you can before the buzzer.</b></p>
+  <div class="eyebrow">Cade Ops</div><div class="rank">HOW TO PLAY</div>
+  <p class="rules">Move with <span class="k">mouse</span> <span class="k">WASD</span> <span class="k">arrows</span> or <span class="k">drag</span>.<br><span class="k">SPACE</span> = <b>BURST</b>. <span class="k">⚡ button</span> = <b>APE DASH</b>. Dash through a team leader to <b>nerf</b> them.<br>You've got <b>6 lives</b>. Touching a team or a rug without dashing <span class="c-danger">costs a life</span>. Grazing builds your <b>DEGEN MULTIPLIER</b>.<br>Green pumps pay out multiplied — <span class="c-gold">3 in a row fills your energy bar</span> for a speed boost.<br><b>Nerf as many teams as you can before the buzzer.</b></p>
   <div class="row"><button class="btn" id="btnHowToPlayBack">Meet The 6 Nerfs</button></div>
 </div>
 
-<div class="screen nerfs-screen" id="scNerfs">
-  <div class="eyebrow">Cade Ops</div>
-  <div class="rank nerfs-heading">THE 6 NERFS</div>
-  <div class="ranksub nerfs-subtitle">They are hunting you too.</div>
-  <div class="nerfs-grid" id="nerfsGrid"></div>
-  <div class="row nerfs-actions"><button class="btn ghost" id="btnNerfsBack">Back</button><button class="btn" id="btnNerfsStart">Let's Cade</button></div>
-</div>
-
-<div class="screen" id="scLeaderboard">
-  <canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas>
-  <div class="eyebrow">Cade Ops</div>
-  <div class="rank">GLOBAL LEADERBOARD</div>
-  <div class="ranksub" id="lbStatus">Loading...</div>
-  <div class="lb-list glass" id="lbList"></div>
-  <div class="row"><button class="btn" id="btnLbBack">Back</button></div>
-</div>
-
-<div class="screen" id="scEnd">
-  <canvas class="brandmark brandmark-end" id="markEnd"></canvas>
-  <div class="eyebrow">Cade Ops</div>
-  <div class="verdict" id="eVerdict">WIPED</div>
-  <div><div class="scorelabel">Final bag</div><div class="bigscore" id="eScore" data-text="0">0</div></div>
-  <div class="rank" id="eRank">GHOSTED</div>
-  <div class="ranksub" id="eRoast"></div>
-  <div class="stats stats-primary" id="eStatsPrimary"></div>
-  <div class="stats stats-secondary" id="eStatsSecondary"></div>
-  <div class="hs" id="eHigh"></div>
-  <div class="hs" id="eGlobalRank"></div>
-  <div class="name-group name-group-results">
-    <div class="player-name-locked-label">CALLSIGN</div>
-    <div class="player-name-locked" id="playerNameLocked">DEGEN</div>
-    <div class="name-hint">Locked to this CADE OPS player</div>
-  </div>
-  <div class="tweetbox" id="eTweet"></div>
-  <div class="row"><button class="btn" id="btnAgain">Run It Back</button></div>
-  <div class="row"><button class="btn ghost wide" id="btnEndLeaderboard">🏆 Leaderboard</button><button class="btn ghost wide" id="btnEndHome">Home</button></div>
-  <div class="row"><button class="btn x-share" id="btnShareX">𝕏 Share on X</button></div>
-  <div class="row">
-    <button class="btn ghost wide" id="btnCopy">Copy Tweet</button>
-    <button class="btn ghost wide" id="btnCard">Save Image</button>
-    <button class="btn ghost theme-toggle" id="btnThemeEnd" aria-label="Toggle theme"><svg viewBox="0 0 24 24" class="icon-svg" id="themeIconEnd" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-  </div>
-</div>
+<div class="screen nerfs-screen" id="scNerfs"><div class="eyebrow">Cade Ops</div><div class="rank nerfs-heading">THE 6 NERFS</div><div class="ranksub nerfs-subtitle">They are hunting you too.</div><div class="nerfs-grid" id="nerfsGrid"></div><div class="row nerfs-actions"><button class="btn ghost" id="btnNerfsBack">Back</button><button class="btn" id="btnNerfsStart">Let's Cade</button></div></div>
+<div class="screen" id="scLeaderboard"><canvas class="brandmark brandmark-end" id="markLeaderboard"></canvas><div class="eyebrow">Cade Ops</div><div class="rank">GLOBAL LEADERBOARD</div><div class="ranksub" id="lbStatus">Loading...</div><div class="lb-list glass" id="lbList"></div><div class="row"><button class="btn" id="btnLbBack">Back</button></div></div>
+<div class="screen" id="scEnd"><canvas class="brandmark brandmark-end" id="markEnd"></canvas><div class="eyebrow">Cade Ops</div><div class="verdict" id="eVerdict">WIPED</div><div><div class="scorelabel">Final bag</div><div class="bigscore" id="eScore" data-text="0">0</div></div><div class="rank" id="eRank">GHOSTED</div><div class="ranksub" id="eRoast"></div><div class="stats stats-primary" id="eStatsPrimary"></div><div class="stats stats-secondary" id="eStatsSecondary"></div><div class="hs" id="eHigh"></div><div class="hs" id="eGlobalRank"></div><div class="name-group name-group-results"><div class="player-name-locked-label">CALLSIGN</div><div class="player-name-locked" id="playerNameLocked">DEGEN</div><div class="name-hint">Locked to this CADE OPS player</div></div><div class="tweetbox" id="eTweet"></div><div class="row"><button class="btn" id="btnAgain">Run It Back</button></div><div class="row"><button class="btn ghost wide" id="btnEndLeaderboard">🏆 Leaderboard</button><button class="btn ghost wide" id="btnEndHome">Home</button></div><div class="row"><button class="btn x-share" id="btnShareX">𝕏 Share on X</button></div><div class="row"><button class="btn ghost wide" id="btnCopy">Copy Tweet</button><button class="btn ghost wide" id="btnCard">Save Image</button><button class="btn ghost theme-toggle" id="btnThemeEnd" aria-label="Toggle theme"><svg viewBox="0 0 24 24" class="icon-svg" id="themeIconEnd" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></div></div>
 
 <script type="module" src="js/main.js"></script>
 <script type="module" src="js/combat-ai.js"></script>
 <script type="module" src="js/nerfs-page.js"></script>
 <script type="module" src="js/burst.js"></script>
 <script type="module" src="js/pause.js"></script>
+<script type="module" src="js/hunt-v2.js"></script>
 </body>
 </html>
