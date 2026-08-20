@@ -23,13 +23,14 @@ export const COMBAT = {
 const shots=[];
 const originalUpdate = Teams.update.bind(Teams);
 let installed = false;
+const MELEE_WINDUP = 0.24;
 
 function profile(t){ return COMBAT[t.roster?.id] || COMBAT.steve; }
 function distanceToPlayer(t){ return Math.hypot(Player.x-t.x,Player.y-t.y)||1; }
 
 function telegraph(t,p){
   const c=t.roster?.accent || "#FFA800";
-  t.attackT = .24;
+  t.attackT = MELEE_WINDUP;
   Parts.spawn(t.x,t.y, p.kind==="melee"?5:3,{c,smin:45,smax:150,lmin:.12,lmax:.28,rmin:1,rmax:2,spark:true});
   Rings.spawn(t.x,t.y,{r0:t.r*.8,max:t.r*(p.kind==="melee"?2.0:1.45),dur:.18,c,w:1.8});
 }
@@ -37,13 +38,9 @@ function telegraph(t,p){
 function fire(t,p){
   if(p.kind==="melee"){
     telegraph(t,p);
-    const d=distanceToPlayer(t);
-    if(d<=p.range+Player.r && Player.dash<=0 && Player.iframes<=0){
-      Game.onHit();
-      t.recoil=.16;
-      t.vx=-Math.cos(t.aimAngle)*120;
-      t.vy=-Math.sin(t.aimAngle)*120;
-    }
+    t.pendingMeleeHit = true;
+    t.meleeHitT = MELEE_WINDUP;
+    t.meleeAimAngle = t.aimAngle;
     return;
   }
 
@@ -133,6 +130,8 @@ function updateCombatTeam(t,dt){
   if(t.grazeCooldown<=0)t.grazed=false;
 
   if(t.disabled){
+    t.pendingMeleeHit=false;
+    t.meleeHitT=0;
     t.vx+=rnd(-1,1)*40*dt;t.vy+=rnd(-1,1)*40*dt;t.vx*=.94;t.vy*=.94;
     t.x=clamp(t.x+t.vx*dt,t.r,W-t.r);t.y=clamp(t.y+t.vy*dt,t.r,H-t.r);
     t.disableT-=dt;
@@ -160,8 +159,25 @@ function updateCombatTeam(t,dt){
 
   movement(t,p,dt,d);
 
+  // Melee attacks have a real wind-up. The telegraph now appears before
+  // damage instead of being painted after the hit has already happened.
+  if(t.pendingMeleeHit){
+    t.meleeHitT=Math.max(0,t.meleeHitT-dt);
+    if(t.meleeHitT<=0){
+      t.pendingMeleeHit=false;
+      const hitRange=(p.range+Player.r);
+      const hitDist=distanceToPlayer(t);
+      if(Player.alive && Game.scene==="play" && Player.dash<=0 && Player.iframes<=0 && hitDist<=hitRange){
+        Game.onHit();
+        t.recoil=.16;
+        t.vx=-Math.cos(t.meleeAimAngle||t.aimAngle)*120;
+        t.vy=-Math.sin(t.meleeAimAngle||t.aimAngle)*120;
+      }
+    }
+  }
+
   const canAttack=Player.alive && Game.scene==="play" && Player.dash<=0 && Player.iframes<=0;
-  if(t.attackCd<=0&&canAttack){
+  if(t.attackCd<=0&&canAttack&&!t.pendingMeleeHit){
     const attackRange=p.kind==="melee"?p.range+Player.r:p.range;
     if(d<=attackRange){
       fire(t,p);
