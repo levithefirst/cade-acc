@@ -16,11 +16,13 @@ const identityHint = document.getElementById("identityHint");
 const identityStatus = document.getElementById("identityStatus");
 const lockedName = document.getElementById("playerNameLocked");
 
-// The global game keyboard handler owns WASD/arrow controls and calls
-// preventDefault() for those keys. Keep text entry isolated from that
-// gameplay handler so callsigns can contain A/S/D (and other normal text
-// input keys) without changing gameplay input behavior.
-identityInput?.addEventListener("keydown", e => e.stopPropagation());
+// Gameplay owns the global WASD/arrow keyboard handler. Text entry is a
+// separate input boundary: stop keyboard events at the input itself so the
+// gameplay listener can never call preventDefault() on a callsign keystroke.
+// Capture is used here so this remains true even if another text-entry
+// listener is added later; it does not cancel the input's default behavior.
+identityInput?.addEventListener("keydown", e => e.stopImmediatePropagation(), {capture:true});
+identityInput?.addEventListener("keyup", e => e.stopImmediatePropagation(), {capture:true});
 
 function setLockedName(name) {
   if (lockedName) lockedName.textContent = name || "DEGEN";
@@ -147,24 +149,44 @@ export async function initPlayerName() {
   }
 }
 
-export async function submitScoreToLeaderboard(score) {
-  const rankEl = document.getElementById("eGlobalRank");
-  if (rankEl) rankEl.textContent = "";
-  try {
-    const s = Store.read();
-    if (!s.playerId || !s.playerName) return;
-    const runId = `run-${Math.floor(Game.runStartedAt || Date.now())}-${Math.round(score)}`;
-    const res = await fetch("/api/submit-score", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ playerId: s.playerId, name: s.playerName, score, runId })
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    setLockedName(data.name || s.playerName);
-    if (data.rank && rankEl) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
-  } catch (e) { /* leaderboard failure never interrupts the run/results flow */ }
+let scoreSubmission = Promise.resolve(null);
+
+export function submitScoreToLeaderboard(score) {
+  const job = (async () => {
+    const rankEl = document.getElementById("eGlobalRank");
+    if (rankEl) rankEl.textContent = "";
+    try {
+      const s = Store.read();
+      if (!s.playerId || !s.playerName) return null;
+      const runId = `run-${Math.floor(Game.runStartedAt || Date.now())}-${Math.round(score)}`;
+      let res;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          res = await fetch("/api/submit-score", {
+            method: "POST",
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerId: s.playerId, name: s.playerName, score, runId })
+          });
+          if (res.ok || res.status < 500) break;
+        } catch (err) {
+          if (attempt === 1) throw err;
+        }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+      if (!res?.ok) return null;
+      const data = await res.json();
+      setLockedName(data.name || s.playerName);
+      if (data.rank && rankEl) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
+      return data;
+    } catch (e) {
+      // leaderboard failure never interrupts the run/results flow
+      return null;
+    }
+  })();
+  scoreSubmission = job;
+  return job;
 }
 
 export async function fetchLeaderboard() {
@@ -210,10 +232,14 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
-function openLeaderboard(){
+async function openLeaderboard(){
   SFX.ui();
   show(scLeaderboard);
   paintDomMark("markLeaderboard", 0.55, Theme.colors().cade, Theme.colors().bg);
+  // If the player opened the leaderboard immediately after a run, finish
+  // the in-flight score write first. Otherwise the read can legitimately
+  // race ahead of the write and show the previous personal best.
+  await scoreSubmission;
   fetchLeaderboard();
 }
 document.getElementById("btnLeaderboard")?.addEventListener("click", openLeaderboard);
