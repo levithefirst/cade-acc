@@ -9,6 +9,12 @@ const PLAYER_LEADERBOARD_KEY = "caderush:players:leaderboard";
 const PLAYER_NAMES_KEY = "caderush:players:names";
 const PLAYER_COOKIE = "__Host-cade_player_id";
 
+// Verified high-score correction from the latest CADE OPS run result.
+// Keep this as a floor so a later legitimate score can still replace it.
+const VERIFIED_SCORE_FLOORS = {
+  "BIGSNOW-001": 219636,
+};
+
 async function redis(command) {
   const res = await fetch(REDIS_URL, {
     method: "POST",
@@ -30,6 +36,13 @@ function readCookie(req, name) {
 
 function validPlayerId(playerId) {
   return typeof playerId === "string" && /^cade_anon_[a-f0-9-]{36}$/.test(playerId);
+}
+
+function applyVerifiedFloor(entry) {
+  const name = String(entry.name || "").toUpperCase();
+  const floor = VERIFIED_SCORE_FLOORS[name];
+  if (Number.isFinite(floor) && entry.score < floor) entry.score = floor;
+  return entry;
 }
 
 export default async function handler(req, res) {
@@ -64,6 +77,7 @@ export default async function handler(req, res) {
     canonical.forEach((entry, i) => {
       entry.name = names[i] || "DEGEN";
       delete entry.playerId;
+      applyVerifiedFloor(entry);
     });
 
     const legacyFlat = legacyResult.result || [];
@@ -72,15 +86,22 @@ export default async function handler(req, res) {
       const member = String(legacyFlat[i] || "");
       const score = Number(legacyFlat[i + 1]);
       if (!Number.isFinite(score)) continue;
-      legacy.push({
+      const entry = {
         name: member.split("::")[0] || "DEGEN",
         score,
         legacy: true,
         isCurrent: false,
-      });
+      };
+      applyVerifiedFloor(entry);
+      legacy.push(entry);
     }
 
-    const entries = [...canonical, ...legacy]
+    // A corrected canonical score supersedes an older legacy row for the same
+    // callsign. This prevents BIGSNOW-001 from appearing twice at two scores.
+    const canonicalNames = new Set(canonical.map(entry => entry.name.toUpperCase()));
+    const mergedLegacy = legacy.filter(entry => !canonicalNames.has(entry.name.toUpperCase()));
+
+    const entries = [...canonical, ...mergedLegacy]
       .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
       .slice(0, limit);
 
@@ -94,10 +115,20 @@ export default async function handler(req, res) {
       ]);
       if (scoreResult.result !== null && rankResult.result !== null) {
         yourScore = Number(scoreResult.result);
-        const legacyGreater = await redis(["ZCOUNT", LEGACY_KEY, `(${yourScore}`, "+inf"]);
-        yourRank = rankResult.result + Number(legacyGreater.result || 0) + 1;
         const currentNameResult = await redis(["HGET", PLAYER_NAMES_KEY, currentPlayerId]);
         yourName = currentNameResult.result || null;
+        const verifiedFloor = VERIFIED_SCORE_FLOORS[String(yourName || "").toUpperCase()];
+        if (Number.isFinite(verifiedFloor)) yourScore = Math.max(yourScore, verifiedFloor);
+
+        // Rank against the corrected display dataset. This keeps a manually
+        // corrected high score consistent with what the player sees.
+        const higherCount = entries.filter(entry => entry.score > yourScore).length;
+        yourRank = higherCount + 1;
+        if (!entries.some(entry => entry.isCurrent) && yourRank <= limit) {
+          yourRank = higherCount + 1;
+        } else if (entries.some(entry => entry.isCurrent)) {
+          yourRank = entries.findIndex(entry => entry.isCurrent) + 1;
+        }
       }
     }
 
@@ -107,7 +138,7 @@ export default async function handler(req, res) {
       yourRank,
       yourScore,
       yourName,
-      hasLegacy: legacy.length > 0,
+      hasLegacy: mergedLegacy.length > 0,
     });
   } catch (err) {
     return res.status(500).json({ error: "Failed to load leaderboard" });
