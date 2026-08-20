@@ -5,8 +5,8 @@ Documentation-only project memory. This file is never imported by JavaScript, CS
 ## Last Verified
 - Date: 2026-08-20
 - Repository: `levithefirst/cade-acc`, branch `main`
-- Production project: `cade-acc` on Vercel
-- Production deployment inspected before this repair: commit `9a114d3a4f7b2c7737bd2b9f531729a1a3b16c85`
+- Current source HEAD: `7c6429ff6fc2451a771b4dcacddbd40eed116df2`
+- Production deployment verified for the code repair: Vercel deployment `dpl_4Fb3LgQa7vDSH8h6nevS4XNAKiy5`, serving commit `e910e883d6f563eb8d47eaa05440da38a8b10f48`, state READY.
 
 ## Architecture
 - Static HTML + native ES modules. `index.html` is the entry point.
@@ -67,7 +67,7 @@ Documentation-only project memory. This file is never imported by JavaScript, CS
 - This document has no runtime role.
 
 ## Known Issues
-- No known active issue from the current repair. Post-deploy interactive testing of a real Android keyboard and a real >200,000-point submission is still recommended because this environment cannot impersonate the user's browser cookie/session.
+- No known active issue from the repaired paths. A real-device keyboard test and a real >200,000-point submission remain the final user-level checks because this environment cannot impersonate the user's browser cookie/session.
 
 ## Resolved Issues
 ### Landing showcase / gold rectangle
@@ -122,20 +122,22 @@ Documentation-only project memory. This file is never imported by JavaScript, CS
 
 ## Verification Checklist
 - [x] Current `main` inspected.
-- [x] Current production deployment identified and ready.
-- [x] Live production HTML inspected.
-- [x] Production `/api/leaderboard?limit=25` inspected and confirmed stale at 86,456 for the affected player.
+- [x] Current production deployment identified and READY.
+- [x] Live production HTML inspected after the code repair deployment.
+- [x] Production `/api/leaderboard?limit=25` inspected.
 - [x] Production runtime logs inspected for `/api/submit-score`.
 - [x] The observed 400 was traced to the 200,000 score ceiling.
-- [x] Callsign input and global gameplay keyboard ownership were traced.
+- [x] Production now serves the repaired `js/leaderboard.js`.
+- [x] Vercel build completed successfully for the repaired code.
 - [x] Gameplay scoring and mechanics left unchanged.
-- [x] Source JavaScript files remain plain ES modules; no framework migration or new dependency was introduced.
+- [x] No application code imports `docs/CADE_OPS_STATE.md`.
 - [ ] Post-deploy interactive Android keyboard test by a real device.
 - [ ] Post-deploy end-to-end score submission above 200,000 using a real player cookie.
 
 ## Current Verified State
-- Source repair commits: `7902d35edd2ee01574e6145b85fc0375c51c89e3` (server score ceiling) and `e910e883d6f563eb8d47eaa05440da38a8b10f48` (callsign isolation + leaderboard submission/read synchronization).
-- This documentation update is intended to be committed with the repair state.
-- Production deployment inspected before the repair served `9a114d3a4f7b2c7737bd2b9f531729a1a3b16c85`.
-- Final production status after the repair is pending deployment/endpoint verification.
-- Open issues: none known; live interactive score submission and mobile keyboard behavior still need a post-deploy real-device check.
+- Source HEAD: `7c6429ff6fc2451a771b4dcacddbd40eed116df2`.
+- Code repair commits: `7902d35edd2ee01574e6145b85fc0375c51c89e3` and `e910e883d6f563eb8d47eaa05440da38a8b10f48`.
+- Production deployment: `dpl_4Fb3LgQa7vDSH8h6nevS4XNAKiy5`, READY, serving `e910e883d6f563eb8d47eaa05440da38a8b10f48`.
+- Vercel build completed without build errors.
+- Production HTML and repaired `js/leaderboard.js` were fetched successfully after deployment.
+- Open issues: none known in source; only real-user/device verification remains for the two interaction paths that require a live browser session.
