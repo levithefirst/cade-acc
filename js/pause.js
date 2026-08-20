@@ -16,7 +16,7 @@
    itself with `Game.paused` directly, same as this file guards pause
    toggling with `Game.scene==="play"`.
    ============================================================ */
-import { Game, W, H } from "./main.js";
+import { Game, W, H, Input, cv } from "./main.js";
 import { startRun, goHome } from "./ui.js";
 import { Floaters } from "./particles.js";
 import { SFX } from "./audio.js";
@@ -106,6 +106,29 @@ dialog.addEventListener("close", ()=>{ if(Game.paused) closePause(); });
 window.addEventListener("keydown", e=>{
   if(e.key==="Escape" && isPausable() && !Game.paused){ e.preventDefault(); openPause(); }
 }, true);
+
+// Release gameplay input whenever a touch ends. Without this, the main
+// canvas listener leaves pointer.active=true after touchend, so the player
+// keeps accelerating toward the last finger position after the finger is
+// lifted. The same cleanup handles touch cancellation and tab switches.
+const releasePointer = e=>{
+  if(e) e.preventDefault();
+  Input.pointer.active = false;
+  Input.isTouch = false;
+};
+cv.addEventListener("touchend", releasePointer, {passive:false});
+cv.addEventListener("touchcancel", releasePointer, {passive:false});
+
+// Keyboard keys can remain logically pressed when the browser loses focus
+// before it delivers keyup. Clear the transient controls on tab/app switch
+// so returning to the game never resumes with a phantom WASD/arrow press.
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){
+    for(const key of Object.keys(Input.keys)) Input.keys[key] = false;
+    Input.dashQueued = false;
+    releasePointer();
+  }
+});
 
 // visibility only — deliberately not the freeze mechanism itself, just
 // shows/hides the button in step with whether pausing is currently valid
