@@ -117,17 +117,16 @@ export default async function handler(req, res) {
         yourScore = Number(scoreResult.result);
         const currentNameResult = await redis(["HGET", PLAYER_NAMES_KEY, currentPlayerId]);
         yourName = currentNameResult.result || null;
-        const verifiedFloor = VERIFIED_SCORE_FLOORS[String(yourName || "").toUpperCase()];
-        if (Number.isFinite(verifiedFloor)) yourScore = Math.max(yourScore, verifiedFloor);
 
-        // Rank against the corrected display dataset. This keeps a manually
-        // corrected high score consistent with what the player sees.
-        const higherCount = entries.filter(entry => entry.score > yourScore).length;
-        yourRank = higherCount + 1;
-        if (!entries.some(entry => entry.isCurrent) && yourRank <= limit) {
-          yourRank = higherCount + 1;
-        } else if (entries.some(entry => entry.isCurrent)) {
-          yourRank = entries.findIndex(entry => entry.isCurrent) + 1;
+        const verifiedFloor = VERIFIED_SCORE_FLOORS[String(yourName || "").toUpperCase()];
+        if (Number.isFinite(verifiedFloor)) {
+          yourScore = Math.max(yourScore, verifiedFloor);
+          // Use the corrected score for the legacy side of the rank calculation.
+          const legacyGreater = await redis(["ZCOUNT", LEGACY_KEY, `(${yourScore}`, "+inf"]);
+          yourRank = rankResult.result + Number(legacyGreater.result || 0) + 1;
+        } else {
+          const legacyGreater = await redis(["ZCOUNT", LEGACY_KEY, `(${yourScore}`, "+inf"]);
+          yourRank = rankResult.result + Number(legacyGreater.result || 0) + 1;
         }
       }
     }
