@@ -16,11 +16,6 @@ const identityHint = document.getElementById("identityHint");
 const identityStatus = document.getElementById("identityStatus");
 const lockedName = document.getElementById("playerNameLocked");
 
-// Gameplay owns the global WASD/arrow keyboard handler. Text entry is a
-// separate input boundary: stop keyboard events at the input itself so the
-// gameplay listener can never call preventDefault() on a callsign keystroke.
-// Capture is used here so this remains true even if another text-entry
-// listener is added later; it does not cancel the input's default behavior.
 identityInput?.addEventListener("keydown", e => e.stopImmediatePropagation(), {capture:true});
 identityInput?.addEventListener("keyup", e => e.stopImmediatePropagation(), {capture:true});
 
@@ -128,6 +123,12 @@ export async function initPlayerName() {
     if (player?.playerId && player?.registered && player?.name) {
       persistIdentity(player.playerId, player.name);
       showTitle();
+      // Recover a score that was left pending by a transient/server-side
+      // submission failure. This makes a rejected write durable across reloads.
+      const current = Store.read();
+      if (current.pendingScore && Number(current.pendingScore.score) > 0) {
+        submitScoreToLeaderboard(Number(current.pendingScore.score));
+      }
       return;
     }
     if (player?.playerId) {
@@ -137,9 +138,6 @@ export async function initPlayerName() {
     }
     showIdentity("WELCOME TO CADE OPS");
   } catch (err) {
-    // A previously registered player can still enter during a temporary
-    // identity-service outage. Score submission remains server-authoritative
-    // and will refuse an unverified/tampered identity rather than trusting it.
     if (saved.playerId && saved.playerName) {
       setLockedName(saved.playerName);
       showTitle();
@@ -151,6 +149,24 @@ export async function initPlayerName() {
 
 let scoreSubmission = Promise.resolve(null);
 
+function savePendingScore(score, runId) {
+  const s = Store.read();
+  const previous = Number(s.pendingScore?.score || 0);
+  if (score >= previous) {
+    s.pendingScore = { score: Math.round(score), runId };
+    Store.write(s);
+  }
+}
+
+function clearPendingScore(score) {
+  const s = Store.read();
+  if (!s.pendingScore) return;
+  if (Number(s.pendingScore.score) <= Number(score)) {
+    delete s.pendingScore;
+    Store.write(s);
+  }
+}
+
 export function submitScoreToLeaderboard(score) {
   const job = (async () => {
     const rankEl = document.getElementById("eGlobalRank");
@@ -158,7 +174,11 @@ export function submitScoreToLeaderboard(score) {
     try {
       const s = Store.read();
       if (!s.playerId || !s.playerName) return null;
-      const runId = `run-${Math.floor(Game.runStartedAt || Date.now())}-${Math.round(score)}`;
+      const cleanScore = Math.round(Number(score));
+      if (!Number.isFinite(cleanScore) || cleanScore < 0) return null;
+      const runId = `run-${Math.floor(Game.runStartedAt || Date.now())}-${cleanScore}`;
+      savePendingScore(cleanScore, runId);
+
       let res;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
@@ -167,7 +187,7 @@ export function submitScoreToLeaderboard(score) {
             credentials: "same-origin",
             cache: "no-store",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ playerId: s.playerId, name: s.playerName, score, runId })
+            body: JSON.stringify({ playerId: s.playerId, name: s.playerName, score: cleanScore, runId })
           });
           if (res.ok || res.status < 500) break;
         } catch (err) {
@@ -177,11 +197,11 @@ export function submitScoreToLeaderboard(score) {
       }
       if (!res?.ok) return null;
       const data = await res.json();
+      clearPendingScore(cleanScore);
       setLockedName(data.name || s.playerName);
       if (data.rank && rankEl) rankEl.innerHTML = `Global rank <b>#${data.rank}</b>`;
       return data;
     } catch (e) {
-      // leaderboard failure never interrupts the run/results flow
       return null;
     }
   })();
@@ -234,13 +254,17 @@ function escapeHtml(s) {
 
 async function openLeaderboard(){
   SFX.ui();
+  // Results can still hold the just-finished run's score. Re-submit it before
+  // reading the board so a previous failed write cannot strand a valid result.
+  if (Game.scene === "end" && Number(Game.score) > 0) {
+    await submitScoreToLeaderboard(Game.score);
+  } else {
+    await scoreSubmission;
+  }
   show(scLeaderboard);
   paintDomMark("markLeaderboard", 0.55, Theme.colors().cade, Theme.colors().bg);
-  // If the player opened the leaderboard immediately after a run, finish
-  // the in-flight score write first. Otherwise the read can legitimately
-  // race ahead of the write and show the previous personal best.
   await scoreSubmission;
-  fetchLeaderboard();
+  await fetchLeaderboard();
 }
 document.getElementById("btnLeaderboard")?.addEventListener("click", openLeaderboard);
 document.getElementById("btnEndLeaderboard")?.addEventListener("click", openLeaderboard);
