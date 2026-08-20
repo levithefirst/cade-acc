@@ -123,8 +123,6 @@ export async function initPlayerName() {
     if (player?.playerId && player?.registered && player?.name) {
       persistIdentity(player.playerId, player.name);
       showTitle();
-      // Recover a score that was left pending by a transient/server-side
-      // submission failure. This makes a rejected write durable across reloads.
       const current = Store.read();
       if (current.pendingScore && Number(current.pendingScore.score) > 0) {
         submitScoreToLeaderboard(Number(current.pendingScore.score));
@@ -256,7 +254,7 @@ async function openLeaderboard(){
   SFX.ui();
   // Results can still hold the just-finished run's score. Re-submit it before
   // reading the board so a previous failed write cannot strand a valid result.
-  if (Game.scene === "end" && Number(Game.score) > 0) {
+  if (Game.scene === "results" && Number(Game.score) > 0) {
     await submitScoreToLeaderboard(Game.score);
   } else {
     await scoreSubmission;
