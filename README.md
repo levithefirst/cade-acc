@@ -101,4 +101,4 @@ The game started out as "Cade Rush". The Redis keys still use the `caderush:` pr
 
 ## License
 
-No license specified.
+MIT. See [LICENSE](LICENSE).
